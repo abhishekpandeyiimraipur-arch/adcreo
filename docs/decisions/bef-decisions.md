@@ -1,0 +1,42 @@
+# BEF Decisions Log
+
+> **Purpose:** Durable record of every authority-stack conflict resolution per BEF §1.4 and §3.7 step 4. Every divergence between PRD V4, TDD V5, and BEF V2 that requires Founder or Architect adjudication lands here so future agent sessions inherit the precedent.
+>
+> **Format per entry:** Date · Axis (A1/A2/A3) · Surface · Resolution · References · Decided by.
+
+---
+
+## 2026-05-20 · D-001 · docs/ restructure + GAP-15 TDD residual cleanup
+
+**Axis:** A3 (execution sequencing) for the restructure; A1+A2 (product/impl) for the TDD edits.
+
+**Surface:**
+- Root-level legacy docs `MVP_PRD_(AdvertWise).md`, `MVP_TDD_(AdvertWise).md`, `MVP_BEF_(AdvertWise).md` were V3-era old-brand artifacts coexisting with the active SSOT (Adcreo V4/V5/V2) in Founder's staging folder.
+- TDD V5 staging copy contained 11 residual `AdvertWise` references that contradicted BEF V2 V2 CHANGELOG (R2 bucket rename, scaffold rename, brand replacement).
+- GAP-15 (PRD V3→V4 sync) was tracked open in BEF §16.7.
+
+**Resolution:**
+- Created annotated tag `baseline/1fd3110-pre-docs-restructure` at HEAD `1fd3110` as the shallow rollback anchor. Prior tag `baseline/0d9cde7-pre-restructure` at `0d9cde7` preserved as deeper rollback point.
+- Scaffolded `docs/active/`, `docs/archive/`, `docs/decisions/`, `docs/build-logs/gates/`.
+- Archived the 3 legacy V3 root docs into `docs/archive/` with original filenames preserved (literal historical record).
+- Placed real Adcreo V4/V5/V2 SSOT docs into `docs/active/` as the new canonical contract surface.
+- Applied 11 surgical edits to `docs/active/Adcreo_launch_TDD_V5.md`:
+  - R2 bucket: `advertwise-assets` → `adcreo-assets` (per BEF §11.8 V2 CHANGELOG entry 25).
+  - Scaffold root: `advertwise/` → `adcreo/` (per BEF V2 V2 CHANGELOG document-wide rename).
+  - 3 LLM prompt templates: brand string updated (runtime-sent text).
+  - 2 product-narrative sections: brand string updated.
+  - 1 tooling path: `advertwise-tools` → `adcreo-tools`.
+  - 2 archive-filename references corrected to match the real on-disk filenames in `docs/archive/`.
+  - 1 legacy v3 section header preserved (intentional historical marker).
+- Zero changes under `backend/`, `frontend/`, `shared/`, `scripts/`, `backend/ci/`. No runtime path touched. No service restart required.
+
+**References:**
+- BEF V2 §1.4 (three-axis authority stack), §1.5 R5/R6 (single-file scope), §3.7 (escalation), §16.7 GAP-15, §16.13 (current build reality).
+- Tag: `baseline/1fd3110-pre-docs-restructure`.
+- Commits: `ea8eae9`, `3509d25`, `090f52b`, `c650840`, `8347a18`, and this entry's commit.
+
+**Decided by:** Founder + Architect (Claude Opus 4.7 strategy session, 2026-05-20).
+
+**Status:** GAP-15 closed for TDD V5. PRD V4 was verified clean during the same restructure (zero `advertwise` hits). BEF V2 V2 CHANGELOG references preserved as intended historical record.
+
+---
