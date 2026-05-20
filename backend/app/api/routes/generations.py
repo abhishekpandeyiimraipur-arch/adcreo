@@ -31,10 +31,10 @@ class InputScrubber:
             if isinstance(val, str):
                 if cls.PROMPT_INJECTION_PATTERN.search(val):
                     logger.error("ECM002-POINT-1")
-                    raise AdvertWiseException(code="ECM-002")
+                    raise AdvertWiseException(message="", ecm_code="ECM-002")
                 if cls.CONTROL_CHAR_PATTERN.search(val):
                     logger.error("ECM002-POINT-2")
-                    raise AdvertWiseException(code="ECM-002")
+                    raise AdvertWiseException(message="", ecm_code="ECM-002")
 
 
 @router.post("/api/generations", status_code=202)
@@ -51,7 +51,7 @@ async def create_generation(
     # 1. File size gate (check before reading body to save bandwidth/memory)
     content_length = request.headers.get("content-length")
     if content_length and int(content_length) > 10 * 1024 * 1024:
-        raise AdvertWiseException(code="ECM-014", status_code=413)
+        raise AdvertWiseException(message="", ecm_code="ECM-014", status_code=413)
 
     content_type = request.headers.get("content-type", "")
     
@@ -66,16 +66,16 @@ async def create_generation(
             body = await request.json()
         except Exception:
             logger.error("ECM002-POINT-3")
-            raise AdvertWiseException(code="ECM-002")
+            raise AdvertWiseException(message="", ecm_code="ECM-002")
             
         if "source_url" not in body:
             logger.error("ECM002-POINT-4")
-            raise AdvertWiseException(code="ECM-002")
+            raise AdvertWiseException(message="", ecm_code="ECM-002")
             
         source_url = body["source_url"]
         if not isinstance(source_url, str):
             logger.error("ECM002-POINT-5")
-            raise AdvertWiseException(code="ECM-002")
+            raise AdvertWiseException(message="", ecm_code="ECM-002")
             
         payload_to_scrub = {"source_url": source_url}
 
@@ -83,19 +83,19 @@ async def create_generation(
         form = await request.form()
         if "source_image" not in form:
             logger.error("ECM002-POINT-6")
-            raise AdvertWiseException(code="ECM-002")
+            raise AdvertWiseException(message="", ecm_code="ECM-002")
             
         source_image = form["source_image"]
         logger.error(f"ECM002-DEBUG: source_image type={type(source_image)}, value={repr(source_image)[:100]}")
         if not isinstance(source_image, UploadFile):
             logger.error("ECM002-POINT-7")
-            raise AdvertWiseException(code="ECM-002")
+            raise AdvertWiseException(message="", ecm_code="ECM-002")
             
         payload_to_scrub = {"filename": source_image.filename or ""}
 
     else:
         logger.error("ECM002-POINT-8")
-        raise AdvertWiseException(code="ECM-002")
+        raise AdvertWiseException(message="", ecm_code="ECM-002")
 
     # 3. Scrub input BEFORE doing any insertions
     InputScrubber.check(payload_to_scrub)
@@ -115,7 +115,7 @@ async def create_generation(
         
         file_bytes = await source_image.read()
         if len(file_bytes) > 10 * 1024 * 1024:
-            raise AdvertWiseException(code="ECM-014", status_code=413)
+            raise AdvertWiseException(message="", ecm_code="ECM-014", status_code=413)
         await asyncio.to_thread(
             r2_client.put_object,
             Bucket=r2_bucket,
@@ -143,7 +143,7 @@ async def create_generation(
     except Exception as e:
         logger.error(f"DB insert failed: {e}", exc_info=True)
         # Enforce Hard Invariant: No raw exceptions leak to client
-        raise AdvertWiseException(code="ECM-013", status_code=500)
+        raise AdvertWiseException(message="", ecm_code="ECM-013", status_code=500)
 
     # 6. ARQ enqueue string reference "phase1_extract"
     arq_pool = request.app.state.arq_pool
