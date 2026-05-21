@@ -40,3 +40,30 @@
 **Status:** GAP-15 closed for TDD V5. PRD V4 was verified clean during the same restructure (zero `advertwise` hits). BEF V2 V2 CHANGELOG references preserved as intended historical record.
 
 ---
+
+## 2026-05-21 — G1 Foundation gate: conditional clear
+
+Context: BEF §15.7 row 1 has 4 criteria for G1.
+Resolution:
+  (i)  ci/run_migrations.py --apply clean — VERIFIED
+  (ii) Seeded ENUMs match [TDD-ENUMS] — VERIFIED (6 ENUMs via psql)
+  (iii) audit_log REVOKE policy — UNVERIFIABLE (no adcreo_app role
+        on Neon free tier; only neondb_owner exists). Deferred to
+        before first paying user. Application layer enforces
+        append-only in the interim.
+  (iv) CI-A green — VERIFIED (GitHub Actions run #3, SHA 4c7916b)
+G1 declared conditionally clear. REVOKE gap logged as D-002.
+Authority: BEF §15.7 row 1 + BEF §3.7
+Resolved by: Abhishek (Founder)
+
+---
+
+## 2026-05-21 — audit_log REVOKE policy untestable on Neon free tier
+
+Context: Neon staging has no separate adcreo_app role.
+Resolution: adcreo_app role to be provisioned before first paying
+user. Logged as gap, not blocker for beta launch.
+Authority: BEF §15.7 row 1 criterion (iii)
+Resolved by: Abhishek (Founder)
+
+---

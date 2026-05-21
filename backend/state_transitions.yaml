@@ -1,0 +1,57 @@
+# state_transitions.yaml
+# Source of truth for the 22-state Adcreo FSM.
+# Read by ci/validate_state_machine.py and tests/fsm/test_fsm_walk.py.
+# DO NOT ADD NEW STATES — FSM frozen at 22 per BEF §6 invariant 13.
+
+states:
+  - queued
+  - extracting
+  - brief_ready
+  - scripting
+  - critiquing
+  - safety_checking
+  - scripts_ready
+  - regenerating
+  - strategy_preview
+  - awaiting_funds
+  - funds_locked
+  - rendering
+  - reflecting
+  - composing
+  - preview_ready
+  - export_queued
+  - export_ready
+  - failed_category
+  - failed_compliance
+  - failed_safety
+  - failed_render
+  - failed_export
+
+terminal_states:
+  - export_ready
+  - failed_category
+  - failed_compliance
+
+transitions:
+  queued:           [extracting, failed_category, failed_compliance]
+  extracting:       [brief_ready, failed_category, failed_compliance]
+  brief_ready:      [scripting]
+  scripting:        [critiquing, failed_safety]
+  critiquing:       [safety_checking]
+  safety_checking:  [scripts_ready, failed_safety]
+  scripts_ready:    [strategy_preview, regenerating, brief_ready]
+  regenerating:     [scripts_ready, failed_safety]
+  strategy_preview: [funds_locked, awaiting_funds, scripts_ready, brief_ready]
+  awaiting_funds:   [strategy_preview, failed_export]
+  funds_locked:     [rendering, failed_render]
+  rendering:        [reflecting, composing, failed_render]
+  reflecting:       [composing, rendering, failed_render]
+  composing:        [preview_ready, failed_render]
+  preview_ready:    [export_queued]
+  export_queued:    [export_ready, failed_export]
+  export_ready:     []
+  failed_category:  []
+  failed_compliance: []
+  failed_safety:    [scripting]
+  failed_render:    [strategy_preview]
+  failed_export:    [export_queued, awaiting_funds]
