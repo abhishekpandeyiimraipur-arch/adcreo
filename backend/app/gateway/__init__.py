@@ -900,7 +900,7 @@ class ModelGateway:
         payload = {
             "inputs":               [text],
             "target_language_code": lang_code,
-            "speaker":              "meera",
+            "speaker":              "priya",
             "speech_sample_rate":   22050,
             "enable_preprocessing": True,
             "model":                "bulbul:v3",
