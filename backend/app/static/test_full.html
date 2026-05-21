@@ -138,6 +138,16 @@ input[type=checkbox]{margin-right:6px;accent-color:#6366f1}
         <div class="gl">Status</div><div class="gv" id="r2-status"></div>
       </div>
       <div class="scripts-grid" id="r2-scripts"></div>
+      <div id="chatPanel" style="margin-top:12px;display:none">
+        <div style="color:#666;font-size:11px;margin-bottom:6px;letter-spacing:.5px">HD-3 CO-PILOT CHAT (max 3 turns)</div>
+        <div id="chatScriptPreview" style="color:#555;font-size:11px;margin-bottom:8px;font-style:italic"></div>
+        <div id="chatLog" style="min-height:40px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="chatInput" placeholder="Refine the selected script..." style="flex:1;margin:0" />
+          <button class="btn btn-go" id="chatBtn" onclick="sendChat()">Send</button>
+        </div>
+        <div id="chatTurns" style="color:#555;font-size:11px;margin-top:4px">Turns used: 0 / 3</div>
+      </div>
     </div>
   </div>
 
@@ -409,7 +419,32 @@ async function step2() {
     const container = document.getElementById('r2-scripts');
     container.innerHTML = '';
 
-    if (Object.keys(criticScores).length > 0) {
+    const rawScripts = d.raw_scripts || [];
+    const selectedId = d.selected_script_id;
+
+    if (rawScripts.length > 0) {
+      const sorted = rawScripts.sort((a,b) => (b.critic_score||0) - (a.critic_score||0));
+      sorted.forEach((s, i) => {
+        const isTop = i === 0;
+        const score = s.critic_score || criticScores[s.framework] || 0;
+        const scoreClass = score >= 85 ? 'hi' : score >= 70 ? 'mid' : 'lo';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="script-card ${isTop ? 'top' : ''}" style="cursor:pointer" onclick="selectScript('${s.framework}')">
+            <div class="s-fw">${isTop ? '★ ' : ''}${s.framework} <span style="color:#555;font-size:10px">(${s.framework_angle})</span></div>
+            <div class="s-score ${scoreClass}">${score}</div>
+            <div class="s-hook">"${s.hook}"</div>
+            <div class="s-body">${s.body}</div>
+            <div style="margin-top:6px;color:#6366f1;font-size:10px">CTA: ${s.cta}</div>
+          </div>
+        `);
+      });
+      document.getElementById('r2-top').innerText = sorted[0]?.framework || '—';
+      window._scripts = sorted;
+      window._selectedScript = sorted[0];
+      document.getElementById('chatPanel').style.display = 'block';
+      document.getElementById('chatScriptPreview').innerText =
+        `[${sorted[0].framework}] ${sorted[0].hook} — ${sorted[0].cta}`;
+    } else if (Object.keys(criticScores).length > 0) {
       const sorted = Object.entries(criticScores).sort((a,b) => b[1]-a[1]);
       sorted.forEach(([fw, score], i) => {
         const isTop = i === 0;
@@ -424,8 +459,7 @@ async function step2() {
       });
       document.getElementById('r2-top').innerText = sorted[0]?.[0] || '—';
     } else {
-      container.innerHTML = '<div class="dim" style="padding:8px;font-size:11px;">critic_scores not in GET response — check DB directly</div>';
-      document.getElementById('r2-top').innerText = '— (see DB)';
+      container.innerHTML = '<div class="dim" style="padding:8px;font-size:11px;">No scripts yet</div>';
     }
 
     setBadge('b2', 'pass', 'PASS');
@@ -496,6 +530,45 @@ async function step3() {
 
   setBadge('b3', 'pass', 'PASS');
   setBadge('g3badge', 'pass', 'CLEARED');
+}
+function selectScript(fw) {
+  if (!window._scripts) return;
+  window._selectedScript = window._scripts.find(s => s.framework === fw);
+  document.querySelectorAll('.script-card').forEach(el => el.classList.remove('top'));
+  event.currentTarget.classList.add('top');
+  const chatPanel = document.getElementById('chatPanel');
+  if (chatPanel) {
+    document.getElementById('chatScriptPreview').innerText =
+      `[${fw}] ${window._selectedScript?.hook} — ${window._selectedScript?.cta}`;
+  }
+}
+
+let chatTurnsUsed = 0;
+async function sendChat() {
+  const msg = document.getElementById('chatInput').value.trim();
+  if (!msg) return;
+  if (chatTurnsUsed >= 3) { alert('Max 3 turns reached'); return; }
+  if (!GEN_ID) return;
+
+  document.getElementById('chatBtn').disabled = true;
+  const { ok, data } = await api('POST', `/api/generations/${GEN_ID}/chat`, {
+    message: msg,
+    script_framework: window._selectedScript?.framework
+  });
+
+  if (ok) {
+    chatTurnsUsed++;
+    document.getElementById('chatTurns').innerText = `Turns used: ${chatTurnsUsed} / 3`;
+    const log = document.getElementById('chatLog');
+    log.insertAdjacentHTML('beforeend',
+      `<div style="margin-bottom:8px">
+        <div style="color:#666;font-size:10px">You: ${msg}</div>
+        <div style="color:#aaa;font-size:11px;margin-top:3px">${data?.refined_script?.full_text || data?.message || JSON.stringify(data)}</div>
+      </div>`
+    );
+    document.getElementById('chatInput').value = '';
+  }
+  document.getElementById('chatBtn').disabled = false;
 }
 </script>
 </body>
