@@ -8,6 +8,8 @@ ALTER TABLE generations
 
 -- Enforce max at DB level as a secondary safety net
 ALTER TABLE generations
+    DROP CONSTRAINT IF EXISTS chk_regenerate_count_max;
+ALTER TABLE generations
     ADD CONSTRAINT chk_regenerate_count_max
     CHECK (regenerate_count <= 2);
 
