@@ -6,7 +6,6 @@ import os
 import re
 import sys
 from pathlib import Path
-import asyncpg
 
 MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "backend" / "app" / "db" / "migrations"
 
@@ -58,6 +57,7 @@ def do_dry_run():
         sys.exit(0)
 
 async def do_apply():
+    import asyncpg
     db_url = os.environ.get("DATABASE_URL")
     if not db_url:
         raise ValueError("DATABASE_URL environment variable is missing.")

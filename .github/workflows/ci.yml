@@ -32,7 +32,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install pyyaml
+        run: pip install pyyaml asyncpg
 
       - name: CI-A — Validate state machine (22 states)
         run: python ci/validate_state_machine.py
