@@ -70,7 +70,7 @@ COST_RATES: dict[str, tuple] = {
 # Provider pool order defines fallback priority (index 0 = primary)
 PROVIDER_POOLS: dict[str, list[str]] = {
     "llm":        ["groq-llama-3.3-70b", "together-llama-3.3"],
-    "moderation": ["together-llama-guard-3", "groq-llama-guard-3"],
+    "moderation": ["groq-llama-guard-3", "together-llama-guard-3"],
 }
 
 # ── TTS Provider Registry ─────────────────────────────────────────
@@ -457,7 +457,7 @@ class ModelGateway:
     async def _call_groq_moderation(self, input_data: dict) -> GatewayResponse:
         api_key = os.environ.get("GROQ_API_KEY", "")
         payload = {
-            "model": "llama-guard-3-8b",
+            "model": "meta-llama/llama-guard-4-12b",
             "messages": [
                 {"role": "user", "content": input_data.get("text", "")}
             ],
