@@ -481,7 +481,6 @@ class ModelGateway:
                 text=result_text,
                 cost_inr=Decimal("0.000"),
                 model_used="openai-moderation",
-                provider="openai",
             )
 
     async def _call_gemini_moderation(self, input_data: dict) -> GatewayResponse:
