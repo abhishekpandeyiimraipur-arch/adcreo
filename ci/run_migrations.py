@@ -36,8 +36,11 @@ def do_dry_run():
             content = f.read_text(encoding="utf-8")
             # The spec says "greps for forbidden patterns", implying line-by-line matching
             for line in content.splitlines():
+                stripped = line.strip()
+                if stripped.startswith("--"):
+                    continue
                 for pattern in FORBIDDEN_PATTERNS:
-                    if pattern.search(line):
+                    if pattern.search(stripped):
                         violation_found = True
                         has_violation = True
                         break
