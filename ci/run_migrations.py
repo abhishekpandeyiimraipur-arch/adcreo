@@ -22,7 +22,7 @@ FORBIDDEN_PATTERNS = [
 def get_migration_files():
     if not MIGRATIONS_DIR.exists():
         return []
-    files = [f for f in MIGRATIONS_DIR.iterdir() if f.is_file() and f.suffix == ".sql" and not f.name.startswith("000")]
+    files = [f for f in MIGRATIONS_DIR.iterdir() if f.is_file() and f.suffix == ".sql" and not f.name.startswith("000") and not f.name.startswith("rollback_")]
     files.sort(key=lambda f: f.name)
     return files
 
