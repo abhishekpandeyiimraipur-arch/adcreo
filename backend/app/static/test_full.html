@@ -429,7 +429,7 @@ async function step2() {
         const score = s.critic_score || criticScores[s.framework] || 0;
         const scoreClass = score >= 85 ? 'hi' : score >= 70 ? 'mid' : 'lo';
         container.insertAdjacentHTML('beforeend', `
-          <div class="script-card ${isTop ? 'top' : ''}" style="cursor:pointer" onclick="selectScript('${s.framework}')">
+          <div class="script-card ${isTop ? 'top' : ''}" style="cursor:pointer" onclick="selectScript('${s.framework}', this)">
             <div class="s-fw">${isTop ? '★ ' : ''}${s.framework} <span style="color:#555;font-size:10px">(${s.framework_angle})</span></div>
             <div class="s-score ${scoreClass}">${score}</div>
             <div class="s-hook">"${s.hook}"</div>
@@ -531,11 +531,11 @@ async function step3() {
   setBadge('b3', 'pass', 'PASS');
   setBadge('g3badge', 'pass', 'CLEARED');
 }
-function selectScript(fw) {
+function selectScript(fw, el) {
   if (!window._scripts) return;
   window._selectedScript = window._scripts.find(s => s.framework === fw);
-  document.querySelectorAll('.script-card').forEach(el => el.classList.remove('top'));
-  event.currentTarget.classList.add('top');
+  document.querySelectorAll('.script-card').forEach(c => c.classList.remove('top'));
+  if (el) el.classList.add('top');
   const chatPanel = document.getElementById('chatPanel');
   if (chatPanel) {
     document.getElementById('chatScriptPreview').innerText =
@@ -546,9 +546,10 @@ function selectScript(fw) {
 let chatTurnsUsed = 0;
 async function sendChat() {
   const msg = document.getElementById('chatInput').value.trim();
-  if (!msg) return;
-  if (chatTurnsUsed >= 3) { alert('Max 3 turns reached'); return; }
-  if (!GEN_ID) return;
+  if (!msg) { alert('Type a message first'); return; }
+  if (chatTurnsUsed >= 3) { alert('Max 3 turns reached (HD-3 cap)'); return; }
+  if (!GEN_ID) { alert('No generation active'); return; }
+  if (!window._selectedScript) { alert('No script selected'); return; }
 
   document.getElementById('chatBtn').disabled = true;
   const { ok, data } = await api('POST', `/api/generations/${GEN_ID}/chat`, {
