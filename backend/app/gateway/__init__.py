@@ -66,12 +66,13 @@ COST_RATES: dict[str, tuple] = {
     "together-llama-guard-3": (Decimal("0.010"), Decimal("0.010")),
     "groq-llama-guard-3": (Decimal("0.000"), Decimal("0.000")),
     "gemini-moderation": (Decimal("0.000"), Decimal("0.000")),
+    "openai-moderation": (Decimal("0.000"), Decimal("0.000")),
 }
 
 # Provider pool order defines fallback priority (index 0 = primary)
 PROVIDER_POOLS: dict[str, list[str]] = {
     "llm":        ["groq-llama-3.3-70b", "together-llama-3.3"],
-    "moderation": ["gemini-moderation"],
+    "moderation": ["openai-moderation"],
 }
 
 # ── TTS Provider Registry ─────────────────────────────────────────
@@ -139,7 +140,7 @@ class ModelGateway:
     def __init__(self, redis_client=None):
         self.together_key = os.environ.get("TOGETHER_API_KEY", "")
         self.gemini_key = os.environ.get("GEMINI_API_KEY", "")
-        self.openai_key = os.environ.get("OPEN_AI_API_KEY", "")
+        self.openai_key = os.environ.get("OPENAI_API_KEY", "")
         self.redis_client = redis_client
         self.last_call_cost = Decimal("0.00")
         self.last_model_used = ""
@@ -404,7 +405,9 @@ class ModelGateway:
         last_error = None
         for provider in ordered:
             try:
-                if provider == "gemini-moderation":
+                if provider == "openai-moderation":
+                    response = await self._call_openai_moderation(input_data)
+                elif provider == "gemini-moderation":
                     response = await self._call_gemini_moderation(input_data)
                 elif provider == "together-llama-guard-3":
                     response = await self._call_together_moderation(input_data)
@@ -455,6 +458,30 @@ class ModelGateway:
                 model_used="together-llama-guard-3",
                 tokens_in=tokens_in,
                 tokens_out=tokens_out
+            )
+
+    async def _call_openai_moderation(self, input_data: dict) -> GatewayResponse:
+        import httpx
+        text = input_data.get("text", "")
+        gen_id = input_data.get("gen_id", "unknown")
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                "https://api.openai.com/v1/moderations",
+                headers={
+                    "Authorization": f"Bearer {self.openai_key}",
+                    "Content-Type": "application/json",
+                },
+                json={"model": "omni-moderation-latest", "input": text}
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            flagged = data["results"][0]["flagged"]
+            result_text = "unsafe" if flagged else "safe"
+            return GatewayResponse(
+                text=result_text,
+                cost_inr=Decimal("0.000"),
+                model_used="openai-moderation",
+                provider="openai",
             )
 
     async def _call_gemini_moderation(self, input_data: dict) -> GatewayResponse:
