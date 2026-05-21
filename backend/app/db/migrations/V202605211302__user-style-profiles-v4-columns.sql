@@ -14,8 +14,6 @@ ALTER TABLE user_style_profiles
         DEFAULT NULL
         CHECK (brand_color_primary ~ '^#[0-9A-Fa-f]{6}$');
 
-INSERT INTO schema_migrations (filename)
-VALUES ('V202605211302__user-style-profiles-v4-columns.sql')
-ON CONFLICT (filename) DO NOTHING;
+
 
 COMMIT;

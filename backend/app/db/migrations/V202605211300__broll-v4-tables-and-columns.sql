@@ -58,8 +58,6 @@ INSERT INTO seasons (season_tag, display_name, active_from, active_to, is_active
     ('raksha_bandhan',  'Raksha Bandhan',  '2026-08-07', '2026-08-09', FALSE)
 ON CONFLICT (season_tag) DO NOTHING;
 
-INSERT INTO schema_migrations (filename)
-VALUES ('V202605211300__broll-v4-tables-and-columns.sql')
-ON CONFLICT (filename) DO NOTHING;
+
 
 COMMIT;

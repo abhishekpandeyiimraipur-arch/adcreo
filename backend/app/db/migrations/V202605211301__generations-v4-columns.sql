@@ -19,8 +19,6 @@ ALTER TABLE generations
         DEFAULT NULL
         CHECK (b_roll_performance_signal BETWEEN 0.0 AND 1.0);
 
-INSERT INTO schema_migrations (filename)
-VALUES ('V202605211301__generations-v4-columns.sql')
-ON CONFLICT (filename) DO NOTHING;
+
 
 COMMIT;
