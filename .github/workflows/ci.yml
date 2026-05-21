@@ -1,0 +1,70 @@
+# .github/workflows/ci.yml
+# Adcreo CI pipeline — Stage 1 (Static Analysis) only.
+# Stages 2-4 authored alongside G2-G4 hardening per BEF §16.13.
+# AW_API_MODE=stub mandatory per BEF §6 invariant 15.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  static-analysis:
+    name: Stage 1 — Static Analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    env:
+      AW_API_MODE: stub
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: CI-A — Validate state machine (22 states)
+        run: python ci/validate_state_machine.py
+
+      - name: CI — Check banned patterns
+        run: python ci/check_banned_patterns.py
+
+      - name: CI — Validate compliance taxonomy
+        run: python ci/validate_compliance_taxonomy.py
+
+      - name: CI — Migration safety guard
+        run: python ci/migration_safety_guard.py
+
+      - name: CI — Migration dry-run
+        run: python ci/run_migrations.py --dry-run
+
+  fsm-tests:
+    name: Stage 2 — FSM Unit Tests
+    runs-on: ubuntu-latest
+    needs: static-analysis
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install pytest pyyaml
+
+      - name: FSM tests
+        run: python -m pytest tests/fsm/ -v
