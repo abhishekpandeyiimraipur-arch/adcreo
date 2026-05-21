@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 import asyncpg
 
-MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "app" / "db" / "migrations"
+MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "backend" / "app" / "db" / "migrations"
 
 FORBIDDEN_PATTERNS = [
     re.compile(r"DROP\s+TABLE", re.IGNORECASE),
