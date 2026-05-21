@@ -132,7 +132,7 @@ async def get_generation(
         "product_brief": product_brief,
         "agent_motion_suggestion": row["agent_motion_suggestion"],
         "director_tips": director_tips,
-        "critic_scores": dict(row["critic_scores"]) if row["critic_scores"] else {},
+        "critic_scores": (json.loads(row["critic_scores"]) if isinstance(row["critic_scores"], str) else dict(row["critic_scores"])) if row["critic_scores"] else {},
         "routed_frameworks": list(row["routed_frameworks"]) if row["routed_frameworks"] else []
     }
 
