@@ -1,6 +1,9 @@
 import os
+import logging
 import redis.asyncio as redis
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 LUA_DIR = Path(__file__).parent / "lua"
 
@@ -38,7 +41,7 @@ class RedisManager:
             with open(LUA_DIR / "circuit_breaker.lua", "r") as f:
                 self.circuit_breaker_sha = await self.db3.script_load(f.read())
         except Exception as e:
-            print(f"Warning: Failed to load Lua scripts (Redis might be offline): {e}")
+            logger.warning(f"Failed to load Lua scripts (Redis might be offline): {e}")
 
     async def disconnect(self):
         if self.db0: await self.db0.aclose()
