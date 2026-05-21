@@ -47,21 +47,16 @@ ENV_PRESETS: dict[int, str] = {
 # Wan:   best for organic fluid motion + cheapest (drift, unbox, liquid).
 # Fallback is always Wan — never fail completely.
 ARCHETYPE_MODEL_MAP: dict[str, list[str]] = {
-    "orbit":       ["fal-ai/kling-video/v1.6/standard/image-to-video",
-                    "fal-ai/wan-i2v"],
-    "drift":       ["fal-ai/wan-i2v",
-                    "fal-ai/minimax-video/image-to-video"],
-    "hero_zoom":   ["fal-ai/kling-video/v1.6/standard/image-to-video",
-                    "fal-ai/wan-i2v"],
-    "unbox":       ["fal-ai/wan-i2v",
-                    "fal-ai/minimax-video/image-to-video"],
-    "liquid_pour": ["fal-ai/wan-i2v",
-                    "fal-ai/minimax-video/image-to-video"],
+    "orbit":       ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
+    "drift":       ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
+    "hero_zoom":   ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
+    "unbox":       ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
+    "liquid_pour": ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
 }
 
 DEFAULT_MODELS = [
+    "fal-ai/fast-svd-lcm",
     "fal-ai/wan-i2v",
-    "fal-ai/minimax-video/image-to-video",
 ]
 
 I2V_TIMEOUT_S = 180.0
