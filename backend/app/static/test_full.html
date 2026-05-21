@@ -185,13 +185,25 @@ input[type=checkbox]{margin-right:6px;accent-color:#6366f1}
   <!-- ═══════════════ GATE 4 ═══════════════ -->
   <div class="gate-hdr">
     <span>G4 — Phase 4 (Compose + Export)</span>
-    <span class="badge b-locked">LOCKED — v4-Δ1 hardening pending</span>
+    <span class="badge b-pending" id="g4badge">PENDING</span>
   </div>
   <div class="card">
-    <div class="locked-msg">
-      Worker-COMPOSE template-branching (structure_template → FFmpeg graph) not yet built.<br>
-      Worker-EXPORT + C2PA signing not yet wired to v4-Δ1 contract.<br>
-      Unlock after G3 cleared + feature/mp5-v4-delta1-hardening merged.
+    <div class="card-hdr">
+      <span class="card-title">Step 4 — Approve Strategy + Render (HD-5)</span>
+      <span class="badge b-pending" id="b4">PENDING</span>
+    </div>
+    <button class="btn btn-go" id="btn4" onclick="step4()" disabled>Approve &amp; Render</button>
+    <div id="res4" style="display:none">
+      <div class="grid">
+        <div class="gl">Status</div><div class="gv" id="r4-status"></div>
+        <div class="gl">TTS</div><div class="gv" id="r4-tts"></div>
+        <div class="gl">I2V</div><div class="gv" id="r4-i2v"></div>
+        <div class="gl">Preview</div>
+        <div class="gv">
+          <video id="r4-vid" controls style="display:none;max-width:320px;margin-top:8px;border:1px solid #333"></video>
+          <span id="r4-vid-err" class="dim"></span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -530,6 +542,7 @@ async function step3() {
 
   setBadge('b3', 'pass', 'PASS');
   setBadge('g3badge', 'pass', 'CLEARED');
+  document.getElementById('btn4').disabled = false;
 }
 function selectScript(fw, el) {
   if (!window._scripts) return;
@@ -570,6 +583,39 @@ async function sendChat() {
     document.getElementById('chatInput').value = '';
   }
   document.getElementById('chatBtn').disabled = false;
+}
+async function step4() {
+  setBadge('b4', 'run', 'APPROVING');
+  document.getElementById('btn4').disabled = true;
+  document.getElementById('res4').style.display = 'block';
+
+  const { ok, data } = await api('POST', `/api/generations/${GEN_ID}/approve-strategy`, {});
+  if (!ok) {
+    setBadge('b4', 'fail', 'FAILED — ' + (data?.detail?.error_code || data?.detail || 'unknown'));
+    document.getElementById('btn4').disabled = false;
+    return;
+  }
+
+  document.getElementById('r4-status').innerText = data.status || 'funds_locked';
+  setBadge('b4', 'run', 'RENDERING');
+  setBadge('g4badge', 'run', 'RUNNING');
+
+  // Poll for preview_ready — Phase 4 takes 60-120s
+  poll('preview_ready', (d) => {
+    setBadge('b4', 'pass', 'PASS');
+    setBadge('g4badge', 'pass', 'CLEARED');
+    document.getElementById('r4-status').innerText = d.status;
+    document.getElementById('r4-tts').innerText = '✓ generated';
+    document.getElementById('r4-i2v').innerText = '✓ generated';
+    if (d.preview_url) {
+      const vid = document.getElementById('r4-vid');
+      vid.src = d.preview_url;
+      vid.style.display = 'block';
+    } else {
+      document.getElementById('r4-vid-err').innerText = 'preview_url not in GET response — check DB';
+    }
+    document.getElementById('btn5').disabled = false;
+  }, 'b4', 180000);
 }
 </script>
 </body>
