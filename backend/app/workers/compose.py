@@ -127,6 +127,7 @@ FRAMEWORK_OVERRIDE: dict[str, str] = {
 # These are FFmpeg drawtext parameter values
 OVERLAY_STYLES: dict[str, tuple] = {
     "hook_top":    ("140",    64, "white"),
+    "hook_i2v":    ("h-220",  52, "white"),   # bottom-third on I2V, slightly smaller
     "cta_bottom":  ("h-180",  56, "white"),
     "cta_center":  ("(h-text_h)/2", 60, "white"),
     "none":        (None, None, None),
@@ -180,6 +181,10 @@ def assign_assets_to_segments(
         if s["source"] == "i2v":
             s["r2_key"] = i2v_r2_key
             s["clip_id"] = None
+            # Option B: repeat hook text on I2V — brand continuity
+            s["overlay_text"] = hook_text
+            s["overlay_style_override"] = "hook_i2v"
+            s["brand_text"] = None
 
         elif s["source"] == "broll":
             if broll_queue:
@@ -376,12 +381,11 @@ class WorkerCompose:
             # ── Add overlay if segment has overlay_text ──
             overlay_text  = seg.get("overlay_text")
             brand_text    = seg.get("brand_text")
-            overlay_style = seg.get("overlay", "none")
+            overlay_style = seg.get("overlay_style_override") or seg.get("overlay", "none")
 
             if overlay_text and overlay_style != "none":
-                style = OVERLAY_STYLES.get(overlay_style,
-                                           OVERLAY_STYLES["none"])
-                y_expr, font_size, font_color = style
+                style_key = overlay_style if overlay_style in OVERLAY_STYLES else "hook_top"
+                y_expr, font_size, font_color = OVERLAY_STYLES[style_key]
 
                 if y_expr is not None:
                     safe_text = overlay_text.replace("'", "\u2019")
@@ -446,7 +450,7 @@ class WorkerCompose:
         parts.append(
             f"[graded_v]drawtext="
             f"text='{safe_watermark}':"
-            f"fontsize=22:fontcolor=white@0.85:"
+            f"fontsize=38:box=1:boxcolor=black@0.4:boxborderw=8:fontcolor=white@0.85:"
             f"x=20:y=h-44[final_v]"
         )
 
