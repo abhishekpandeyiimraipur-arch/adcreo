@@ -65,12 +65,13 @@ COST_RATES: dict[str, tuple] = {
     "together-llama-3.3": (Decimal("0.018"), Decimal("0.060")),
     "together-llama-guard-3": (Decimal("0.010"), Decimal("0.010")),
     "groq-llama-guard-3": (Decimal("0.000"), Decimal("0.000")),
+    "gemini-moderation": (Decimal("0.000"), Decimal("0.000")),
 }
 
 # Provider pool order defines fallback priority (index 0 = primary)
 PROVIDER_POOLS: dict[str, list[str]] = {
     "llm":        ["groq-llama-3.3-70b", "together-llama-3.3"],
-    "moderation": ["groq-llama-guard-3", "together-llama-guard-3"],
+    "moderation": ["gemini-moderation"],
 }
 
 # ── TTS Provider Registry ─────────────────────────────────────────
@@ -403,7 +404,9 @@ class ModelGateway:
         last_error = None
         for provider in ordered:
             try:
-                if provider == "together-llama-guard-3":
+                if provider == "gemini-moderation":
+                    response = await self._call_gemini_moderation(input_data)
+                elif provider == "together-llama-guard-3":
                     response = await self._call_together_moderation(input_data)
                 elif provider == "groq-llama-guard-3":
                     response = await self._call_groq_moderation(input_data)
@@ -453,6 +456,34 @@ class ModelGateway:
                 tokens_in=tokens_in,
                 tokens_out=tokens_out
             )
+
+    async def _call_gemini_moderation(self, input_data: dict) -> GatewayResponse:
+        import google.generativeai as genai
+        import asyncio
+        text = input_data.get("text", "")
+        gen_id = input_data.get("gen_id", "unknown")
+        genai.configure(api_key=self.gemini_key)
+        model = genai.GenerativeModel("gemini-2.0-flash")
+        prompt = (
+            f"You are a content safety classifier for Indian D2C advertising.\n"
+            f"Classify this ad script as safe or unsafe.\n"
+            f"Respond with ONLY the single word 'safe' or 'unsafe'. No explanation.\n\n"
+            f"Ad script: {text}"
+        )
+        try:
+            response = await asyncio.to_thread(model.generate_content, prompt)
+            result_text = response.text.strip().lower()
+            tokens_in = len(prompt.split())
+            tokens_out = 1
+            cost = self._calculate_cost("gemini-moderation", tokens_in, tokens_out)
+            return GatewayResponse(
+                text=result_text,
+                cost_inr=cost,
+                model_used="gemini-moderation",
+                provider="gemini",
+            )
+        except Exception as e:
+            raise Exception(f"Gemini moderation failed for gen_id={gen_id}: {e}")
 
     async def _call_groq_moderation(self, input_data: dict) -> GatewayResponse:
         api_key = os.environ.get("GROQ_API_KEY", "")
