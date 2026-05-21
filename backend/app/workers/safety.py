@@ -22,6 +22,12 @@ COMPETITOR_DENYLIST = [
     "patanjali", "baidyanath", "himalaya", "mamaearth",
     "wow skincare", "plum", "nykaa", "mcaffeine",
     "forest essentials", "biotique", "khadi",
+    # Indian fashion brands
+    "manyavar", "mohey", "fabindia", "biba", "w for woman",
+    "aurelia", "global desi", "libas", "indo western",
+    # Indian food brands
+    "haldiram", "bikaji", "bikanervala", "amul", "britannia",
+    "parle", "dabur", "emami",
     # Ad generation platform competitors (never mention in ads)
     "creatify", "invideo", "pictory", "synthesia",
     "canva", "kapwing", "vidyo",

@@ -900,13 +900,13 @@ class ModelGateway:
         payload = {
             "inputs":               [text],
             "target_language_code": lang_code,
-            "speaker":              "anushka",
+            "speaker":              "meera",
             "pitch":                0,
             "pace":                 1.0,
             "loudness":             1.5,
             "speech_sample_rate":   22050,
             "enable_preprocessing": True,
-            "model":                "bulbul:v2",
+            "model":                "bulbul:v3",
         }
 
         async with httpx.AsyncClient(timeout=30.0) as client:

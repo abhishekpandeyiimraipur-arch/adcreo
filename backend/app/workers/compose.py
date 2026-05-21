@@ -361,8 +361,8 @@ class WorkerCompose:
                 parts.append(
                     f"[{input_idx}:v]fps=30,"
                     f"scale={W}:{H}:"
-                    f"force_original_aspect_ratio=decrease,"
-                    f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:black,"
+                    f"force_original_aspect_ratio=increase,"
+                    f"crop={W}:{H},"
                     f"tpad=stop_mode=clone:"
                     f"stop_duration="
                     f"{max(0.0, duration_s - 0.1):.3f},"
