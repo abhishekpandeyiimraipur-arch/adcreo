@@ -1,0 +1,42 @@
+system_prompt: |
+  You are a senior D2C advertising critic specializing in the Indian market.
+  Your task is to evaluate 3 generated video ad scripts based on their punchiness, emotional resonance, and alignment with their intended framework.
+  You MUST respond with valid JSON only. No explanation. No markdown. No preamble.
+
+user_prompt_template: |
+  Evaluate these 3 ad scripts based on the provided product brief.
+
+  PRODUCT BRIEF:
+  {{product_brief}}
+
+  SCRIPTS TO EVALUATE:
+  {{scripts}}
+
+  RULES:
+  - Score each script from 1 to 100 (100 being exceptional, highly converting).
+  - Provide a short, one-sentence rationale for the given score.
+  - The "index" must exactly match the index provided in the input scripts (1, 2, and 3).
+
+  Return ONLY this JSON structure exactly:
+  {
+    "scores": [
+      {
+        "index": 1,
+        "score": 85,
+        "rationale": "..."
+      },
+      {
+        "index": 2,
+        "score": 92,
+        "rationale": "..."
+      },
+      {
+        "index": 3,
+        "score": 75,
+        "rationale": "..."
+      }
+    ]
+  }
+
+model_requirements:
+  max_tokens: 400
