@@ -63,6 +63,7 @@ COST_RATES: dict[str, tuple] = {
     "deepseek-v3":        (Decimal("0.022"), Decimal("0.090")),
     "groq-llama-3.3-70b": (Decimal("0.000"), Decimal("0.000")),
     "together-llama-3.3": (Decimal("0.018"), Decimal("0.060")),
+    "openai-gpt4o-mini":  (Decimal("0.015"), Decimal("0.060")),
     "together-llama-guard-3": (Decimal("0.010"), Decimal("0.010")),
     "groq-llama-guard-3": (Decimal("0.000"), Decimal("0.000")),
     "gemini-moderation": (Decimal("0.000"), Decimal("0.000")),
@@ -71,7 +72,7 @@ COST_RATES: dict[str, tuple] = {
 
 # Provider pool order defines fallback priority (index 0 = primary)
 PROVIDER_POOLS: dict[str, list[str]] = {
-    "llm":        ["groq-llama-3.3-70b", "together-llama-3.3"],
+    "llm":        ["groq-llama-3.3-70b", "deepseek-v3", "openai-gpt4o-mini"],
     "moderation": ["openai-moderation"],
 }
 
@@ -251,7 +252,9 @@ class ModelGateway:
         last_error = None
         for provider in ordered:
             try:
-                if provider == "deepseek-v3":
+                if provider == "openai-gpt4o-mini":
+                    response = await self._call_openai_llm(input_data, max_tokens)
+                elif provider == "deepseek-v3":
                     response = await self._call_deepseek_llm(input_data, max_tokens)
                 elif provider == "groq-llama-3.3-70b":
                     response = await self._call_groq_llm(input_data, max_tokens)
@@ -306,6 +309,37 @@ class ModelGateway:
                 model_used="deepseek-v3",
                 tokens_in=tokens_in,
                 tokens_out=tokens_out
+            )
+
+    async def _call_openai_llm(self, input_data: dict, max_tokens: int) -> GatewayResponse:
+        import httpx
+        async with httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://api.openai.com/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.openai_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": "gpt-4o-mini",
+                    "messages": [
+                        {"role": "system", "content": input_data.get("system_prompt", "")},
+                        {"role": "user", "content": input_data.get("user_prompt", "")}
+                    ],
+                    "max_tokens": max_tokens,
+                    "response_format": {"type": "json_object"} if input_data.get("response_format", {}).get("type") == "json_object" else {"type": "text"},
+                }
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            text = data["choices"][0]["message"]["content"]
+            tokens_in = data["usage"]["prompt_tokens"]
+            tokens_out = data["usage"]["completion_tokens"]
+            cost = self._calculate_cost("openai-gpt4o-mini", tokens_in, tokens_out)
+            return GatewayResponse(
+                text=text,
+                cost_inr=cost,
+                model_used="openai-gpt4o-mini",
             )
 
     async def _call_groq_llm(self, input_data: dict, max_tokens: int) -> GatewayResponse:
