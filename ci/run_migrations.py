@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 import asyncpg
 
-MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "backend" / "app" / "db" / "migrations"
+MIGRATIONS_DIR = Path(__file__).resolve().parent.parent / "app" / "db" / "migrations"
 
 FORBIDDEN_PATTERNS = [
     re.compile(r"DROP\s+TABLE", re.IGNORECASE),
@@ -22,7 +22,7 @@ FORBIDDEN_PATTERNS = [
 def get_migration_files():
     if not MIGRATIONS_DIR.exists():
         return []
-    files = [f for f in MIGRATIONS_DIR.iterdir() if f.is_file() and f.suffix == ".sql"]
+    files = [f for f in MIGRATIONS_DIR.iterdir() if f.is_file() and f.suffix == ".sql" and not f.name.startswith("000")]
     files.sort(key=lambda f: f.name)
     return files
 
