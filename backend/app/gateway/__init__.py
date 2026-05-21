@@ -110,6 +110,8 @@ TTS_PROVIDERS: dict = {
 # All Fal.ai models use identical queue pattern.
 # Adding a new model = add one entry here.
 FAL_QUEUE_BASE = "https://queue.fal.run"
+ATLASCLOUD_API_BASE = "https://api.atlascloud.ai/api/v1"
+ATLASCLOUD_MODEL = "wan-2.2"  # cheapest good quality for testing
 I2V_MODELS: dict = {
     "fal-ai/wan-i2v": {
         "key_env": "FAL_KEY",
@@ -142,6 +144,7 @@ class ModelGateway:
         self.together_key = os.environ.get("TOGETHER_API_KEY", "")
         self.gemini_key = os.environ.get("GEMINI_API_KEY", "")
         self.openai_key = os.environ.get("OPENAI_API_KEY", "")
+        self.atlascloud_key = os.environ.get("ATLAS_CLOUD_API_KEY", "")
         self.redis_client = redis_client
         self.last_call_cost = Decimal("0.00")
         self.last_model_used = ""
@@ -991,11 +994,15 @@ class ModelGateway:
 
     async def _route_i2v(self, input_data: dict) -> GatewayResponse:
         """
-        I2V with 3-provider fallback chain:
-        1. Fal.ai → 2. Replicate → 3. Minimax
-        Moves to next provider on 402/403/credit errors.
+        I2V with 4-provider fallback chain:
+        1. Atlas Cloud (primary — cheapest) → 2. Fal.ai → 3. Replicate → 4. Minimax
         """
         gen_id = input_data.get("gen_id", "")
+
+        try:
+            return await self._call_atlascloud_i2v(input_data)
+        except ProviderUnavailableError as e:
+            logger.warning(f"Atlas Cloud I2V failed gen={gen_id}: {e} — trying Fal.ai")
 
         try:
             return await self._call_fal_i2v(input_data)
@@ -1008,12 +1015,84 @@ class ModelGateway:
         try:
             return await self._call_replicate_i2v(input_data)
         except ProviderUnavailableError as e:
-            if any(x in str(e) for x in ["402", "403", "credit", "Insufficient"]):
-                logger.warning(f"Replicate exhausted gen={gen_id} — trying Minimax")
-            else:
-                raise
+            logger.warning(f"Replicate failed gen={gen_id} — trying Minimax")
 
         return await self._call_minimax_i2v(input_data)
+
+    async def _call_atlascloud_i2v(self, input_data: dict) -> GatewayResponse:
+        """
+        Atlas Cloud I2V — cheapest production-quality provider.
+        Pattern: POST /uploadMedia → POST /generateVideo → poll /prediction/{id}
+        """
+        import httpx
+        image_url = input_data.get("image_url", "")
+        prompt    = input_data.get("prompt", "")
+        duration  = input_data.get("duration", 9)
+        gen_id    = input_data.get("gen_id", "")
+        headers   = {
+            "Authorization": f"Bearer {self.atlascloud_key}",
+            "Content-Type": "application/json",
+        }
+        if not self.atlascloud_key:
+            raise ProviderUnavailableError("ATLAS_CLOUD_API_KEY not set")
+
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            # Step 1: Submit I2V job
+            logger.info(f"Atlas Cloud I2V submit gen={gen_id} model={ATLASCLOUD_MODEL}")
+            submit_resp = await client.post(
+                f"{ATLASCLOUD_API_BASE}/model/generateVideo",
+                headers=headers,
+                json={
+                    "model": f"{ATLASCLOUD_MODEL}/image-to-video",
+                    "image_url": image_url,
+                    "prompt": prompt,
+                    "duration": duration,
+                    "aspect_ratio": "9:16",
+                }
+            )
+            if submit_resp.status_code not in (200, 201):
+                raise ProviderUnavailableError(
+                    f"Atlas Cloud submit failed {submit_resp.status_code}: {submit_resp.text[:200]}"
+                )
+            prediction_id = submit_resp.json().get("data", {}).get("id", "")
+            if not prediction_id:
+                raise ProviderUnavailableError(f"Atlas Cloud no prediction ID: {submit_resp.text[:200]}")
+            logger.info(f"Atlas Cloud I2V queued gen={gen_id} id={prediction_id}")
+
+            # Step 2: Poll every 5s (max 3 min = 36 polls)
+            for attempt in range(36):
+                await asyncio.sleep(5)
+                poll_resp = await client.get(
+                    f"{ATLASCLOUD_API_BASE}/model/prediction/{prediction_id}",
+                    headers=headers,
+                    timeout=10.0,
+                )
+                if poll_resp.status_code != 200:
+                    continue
+                poll_data = poll_resp.json().get("data", {})
+                status = poll_data.get("status", "")
+                logger.info(f"Atlas Cloud poll gen={gen_id} attempt={attempt+1} status={status}")
+
+                if status in ("succeeded", "completed", "success"):
+                    outputs = poll_data.get("outputs", [])
+                    video_url = outputs[0] if outputs else poll_data.get("output", "")
+                    if not video_url:
+                        raise ProviderUnavailableError(f"Atlas Cloud no output gen={gen_id}")
+                    await self._record_health("atlascloud", "i2v", True)
+                    logger.info(f"Atlas Cloud I2V done gen={gen_id} url={str(video_url)[:60]}")
+                    return GatewayResponse(
+                        video_url=video_url if isinstance(video_url, str) else video_url.get("url", ""),
+                        model_used=f"atlascloud/{ATLASCLOUD_MODEL}",
+                        cost_inr=Decimal("37.0"),  # ~$0.45 at 83 INR/USD
+                    )
+                elif status in ("failed", "error", "canceled"):
+                    await self._record_health("atlascloud", "i2v", False)
+                    raise ProviderUnavailableError(
+                        f"Atlas Cloud {status} gen={gen_id}: {poll_data.get('error', 'unknown')}"
+                    )
+
+            await self._record_health("atlascloud", "i2v", False)
+            raise ProviderUnavailableError(f"Atlas Cloud timeout 180s gen={gen_id}")
 
     async def _call_fal_i2v(self, input_data: dict) -> GatewayResponse:
         """Fal.ai I2V via raw HTTP queue."""
