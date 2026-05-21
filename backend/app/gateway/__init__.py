@@ -111,7 +111,7 @@ TTS_PROVIDERS: dict = {
 # Adding a new model = add one entry here.
 FAL_QUEUE_BASE = "https://queue.fal.run"
 ATLASCLOUD_API_BASE = "https://api.atlascloud.ai/api/v1"
-ATLASCLOUD_MODEL = "wan-2.2"  # cheapest good quality for testing
+ATLASCLOUD_MODEL = "atlascloud/wan-2.2/image-to-video"
 I2V_MODELS: dict = {
     "fal-ai/wan-i2v": {
         "key_env": "FAL_KEY",
@@ -1043,18 +1043,22 @@ class ModelGateway:
                 f"{ATLASCLOUD_API_BASE}/model/generateVideo",
                 headers=headers,
                 json={
-                    "model": f"{ATLASCLOUD_MODEL}/image-to-video",
-                    "image_url": image_url,
-                    "prompt": prompt,
-                    "duration": duration,
-                    "aspect_ratio": "9:16",
+                    "model": ATLASCLOUD_MODEL,
+                    "input": {
+                        "image_url": image_url,
+                        "prompt": prompt,
+                        "duration": duration,
+                        "aspect_ratio": "9:16",
+                    }
                 }
             )
             if submit_resp.status_code not in (200, 201):
                 raise ProviderUnavailableError(
                     f"Atlas Cloud submit failed {submit_resp.status_code}: {submit_resp.text[:200]}"
                 )
-            prediction_id = submit_resp.json().get("data", {}).get("id", "")
+            resp_json = submit_resp.json()
+            prediction_id = (resp_json.get("data", {}).get("id", "") or
+                           resp_json.get("id", ""))
             if not prediction_id:
                 raise ProviderUnavailableError(f"Atlas Cloud no prediction ID: {submit_resp.text[:200]}")
             logger.info(f"Atlas Cloud I2V queued gen={gen_id} id={prediction_id}")
