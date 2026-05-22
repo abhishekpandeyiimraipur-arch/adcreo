@@ -118,6 +118,6 @@ class WorkerSettings:
     on_job_dead = on_job_dead
 
     max_jobs = 6          # hard cap per §8.8 — do not increase without PRD change
-    job_timeout = 300     # coordinator max — export has its own 45s cap
+    job_timeout = 480     # coordinator max — export has its own 45s cap
 
     health_check_interval = 30

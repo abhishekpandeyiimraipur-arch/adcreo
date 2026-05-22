@@ -1064,7 +1064,7 @@ class ModelGateway:
             logger.info(f"Atlas Cloud I2V queued gen={gen_id} id={prediction_id}")
 
             # Step 2: Poll every 5s (max 3 min = 36 polls)
-            for attempt in range(36):
+            for attempt in range(54):
                 await asyncio.sleep(5)
                 poll_resp = await client.get(
                     f"{ATLASCLOUD_API_BASE}/model/prediction/{prediction_id}",
