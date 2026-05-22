@@ -111,7 +111,7 @@ TTS_PROVIDERS: dict = {
 # Adding a new model = add one entry here.
 FAL_QUEUE_BASE = "https://queue.fal.run"
 ATLASCLOUD_API_BASE = "https://api.atlascloud.ai/api/v1"
-ATLASCLOUD_MODEL = "atlascloud/wan-2.2/image-to-video"
+ATLASCLOUD_MODEL = "alibaba/wan-2.6/image-to-video"
 I2V_MODELS: dict = {
     "fal-ai/wan-i2v": {
         "key_env": "FAL_KEY",
@@ -1044,12 +1044,9 @@ class ModelGateway:
                 headers=headers,
                 json={
                     "model": ATLASCLOUD_MODEL,
-                    "input": {
-                        "image_url": image_url,
-                        "prompt": prompt,
-                        "duration": duration,
-                        "aspect_ratio": "9:16",
-                    }
+                    "image": image_url,
+                    "prompt": prompt,
+                    "duration": duration,
                 }
             )
             if submit_resp.status_code not in (200, 201):
