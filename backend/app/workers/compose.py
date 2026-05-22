@@ -352,12 +352,23 @@ class WorkerCompose:
 
             ffmpeg_inputs += ["-i", seg["local_path"]]
 
-            # Scale + pad/trim every segment to exact duration at 1080×1920
+            # I2V: preserve full product frame — scale to fit, pad black edges
+            # B-roll/cta_card: fill frame — scale up and crop (abstract clips)
+            if seg["kind"] == "i2v":
+                scale_filter = (
+                    f"scale={W}:{H}:"
+                    f"force_original_aspect_ratio=decrease,"
+                    f"pad={W}:{H}:(ow-iw)/2:(oh-ih)/2:black"
+                )
+            else:
+                scale_filter = (
+                    f"scale={W}:{H}:"
+                    f"force_original_aspect_ratio=increase,"
+                    f"crop={W}:{H}"
+                )
             parts.append(
                 f"[{input_idx}:v]fps=30,"
-                f"scale={W}:{H}:"
-                f"force_original_aspect_ratio=increase,"
-                f"crop={W}:{H},"
+                f"{scale_filter},"
                 f"tpad=stop_mode=clone:"
                 f"stop_duration={max(0.0, duration_s - 0.033):.3f},"
                 f"trim=end={duration_s:.3f},"
