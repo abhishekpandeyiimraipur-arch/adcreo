@@ -202,16 +202,18 @@ def assign_assets_to_segments(
             s["clip_id"] = None
 
         # Attach overlay text based on overlay style + segment type
-        overlay_style = s.get("overlay", "none")
-        if overlay_style == "hook_top":
-            s["overlay_text"] = hook_text
-            s["brand_text"]   = None
-        elif overlay_style in ("cta_bottom", "cta_center"):
-            s["overlay_text"] = cta_text
-            s["brand_text"]   = brand_name  # shown below CTA text
-        else:
-            s["overlay_text"] = None
-            s["brand_text"]   = None
+        # Skip if overlay_style_override already set (e.g. i2v hook_i2v)
+        if not s.get("overlay_style_override"):
+            overlay_style = s.get("overlay", "none")
+            if overlay_style == "hook_top":
+                s["overlay_text"] = hook_text
+                s["brand_text"]   = None
+            elif overlay_style in ("cta_bottom", "cta_center"):
+                s["overlay_text"] = cta_text
+                s["brand_text"]   = brand_name
+            else:
+                s["overlay_text"] = None
+                s["brand_text"]   = None
 
         s["primary_color"] = primary_color
         resolved.append(s)
