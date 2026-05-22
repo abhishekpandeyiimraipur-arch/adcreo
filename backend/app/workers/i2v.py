@@ -47,15 +47,15 @@ ENV_PRESETS: dict[int, str] = {
 # Wan:   best for organic fluid motion + cheapest (drift, unbox, liquid).
 # Fallback is always Wan — never fail completely.
 ARCHETYPE_MODEL_MAP: dict[str, list[str]] = {
-    "orbit":       ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
-    "drift":       ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
-    "hero_zoom":   ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
-    "unbox":       ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
-    "liquid_pour": ["fal-ai/fast-svd-lcm", "fal-ai/wan-i2v"],
+    "orbit":       ["atlascloud/wan-2.2/image-to-video", "fal-ai/wan-i2v"],
+    "drift":       ["atlascloud/wan-2.2/image-to-video", "fal-ai/wan-i2v"],
+    "hero_zoom":   ["atlascloud/wan-2.2/image-to-video", "fal-ai/wan-i2v"],
+    "unbox":       ["atlascloud/wan-2.2/image-to-video", "fal-ai/wan-i2v"],
+    "liquid_pour": ["atlascloud/wan-2.2/image-to-video", "fal-ai/wan-i2v"],
 }
 
 DEFAULT_MODELS = [
-    "fal-ai/fast-svd-lcm",
+    "atlascloud/wan-2.2/image-to-video",
     "fal-ai/wan-i2v",
 ]
 
