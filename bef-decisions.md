@@ -22,3 +22,18 @@ Authority: BEF §16.13
 Resolved by: Abhishek (Founder) + Architect
 
 ---
+
+2026-05-23 — G3 + G4 Gates Verified
+
+Context: compose.py was using PACING_TEMPLATES (Drift/Reveal/Showcase/Festival)
+re-derived from motion_name — wrong template system. b_roll_plan was parsed as
+list (S14 violation). phase4_coordinator defaulted b_roll_plan to "[]".
+Resolution: compose.py fully rewritten — T1-T5 branching on b_roll_plan["template"],
+_render_cta_text_card for T2/T3/T4/T5, variable-arity filter_complex,
+b_roll_plan accepted as dict. phase4_coordinator default changed "[]" → "{}".
+G3 verified: strategist 6-arg planner call confirmed live.
+G4 verified: compose template-branched on structure_template.
+Authority: TDD [TDD-BROLL]-H, [TDD-VIDEO]-B, BEF §16.13
+Resolved by: Abhishek (Founder) + Architect
+
+---
