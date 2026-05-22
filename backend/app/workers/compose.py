@@ -246,7 +246,9 @@ def build_timeline_ir(
 
     # Brand tokens
     primary_color = brand_profile.get("primary_color", "#FFFFFF")
-    brand_name    = brand_profile.get("brand_name", "AdvertWise")
+    from app.workers.safety import COMPETITOR_DENYLIST
+    _raw_brand = brand_profile.get("brand_name", "Adcreo")
+    brand_name = "Adcreo" if _raw_brand.lower() in COMPETITOR_DENYLIST else _raw_brand
 
     # Select template
     template_key, template = select_template(strategy_card)
