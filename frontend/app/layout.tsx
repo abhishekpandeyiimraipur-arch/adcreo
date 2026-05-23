@@ -1,10 +1,6 @@
-import type { Metadata } from "next"
+"use client"
 import "./globals.css"
-
-export const metadata: Metadata = {
-  title: "Adcreo — AI Video Ads for India",
-  description: "India-first agentic AI video ad platform for D2C brands",
-}
+import { GoogleOAuthProvider } from "@react-oauth/google"
 
 export default function RootLayout({
   children,
@@ -14,7 +10,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="bg-black text-white antialiased min-h-screen">
-        {children}
+        <GoogleOAuthProvider
+          clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}
+        >
+          {children}
+        </GoogleOAuthProvider>
       </body>
     </html>
   )
