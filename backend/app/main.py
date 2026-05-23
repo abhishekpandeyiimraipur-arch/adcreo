@@ -76,9 +76,25 @@ async def lifespan(app: FastAPI):
     await app.state.db_pool.close()
     await redis_mgr.disconnect()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
-    title="AdvertWise API",
+    title="Adcreo API",
     lifespan=lifespan
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "https://adcreo.in",
+        "https://www.adcreo.in",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 add_exception_handlers(app)
