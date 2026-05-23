@@ -9,25 +9,15 @@ import os
 import sys
 import psycopg2
 
+# hook is mandatory — compose raises BRollCoverageError without it.
+# context and cta_bg are optional — compose falls back to text-card gracefully.
 REQUIRED = [
     ("d2c_beauty",       "hook"),
-    ("d2c_beauty",       "context"),
-    ("d2c_beauty",       "cta_bg"),
     ("packaged_food",    "hook"),
-    ("packaged_food",    "context"),
-    ("packaged_food",    "cta_bg"),
     ("electronics",      "hook"),
-    ("electronics",      "context"),
-    ("electronics",      "cta_bg"),
     ("hard_accessories", "hook"),
-    ("hard_accessories", "context"),
-    ("hard_accessories", "cta_bg"),
     ("home_kitchen",     "hook"),
-    ("home_kitchen",     "context"),
-    ("home_kitchen",     "cta_bg"),
     ("d2c_fashion",      "hook"),
-    ("d2c_fashion",      "context"),
-    ("d2c_fashion",      "cta_bg"),
 ]
 
 def main():
