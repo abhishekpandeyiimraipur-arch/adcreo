@@ -129,7 +129,7 @@ async def create_generation(
 
     insert_query = """
         INSERT INTO generations (gen_id, user_id, source_url, source_image_url, plan_tier, status)
-        VALUES ($1, $2, $3, $4, 'starter', 'queued')
+        VALUES ($1, $2, $3, $4, (SELECT COALESCE(plan_tier, 'starter') FROM users WHERE user_id=$2), 'queued')
     """
     
     try:

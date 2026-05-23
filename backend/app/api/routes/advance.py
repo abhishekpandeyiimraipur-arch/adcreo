@@ -67,7 +67,8 @@ async def get_generation(
     # Step 1: DB fetch with mandatory user ownership check
     query = """
         SELECT gen_id, status, confidence_score, isolated_png_url,
-               source_url, product_brief, agent_motion_suggestion, user_id
+               source_url, product_brief, agent_motion_suggestion, user_id,
+               critic_scores, routed_frameworks, raw_scripts, selected_script_id
         FROM generations
         WHERE gen_id = $1 AND user_id = $2
     """
@@ -130,7 +131,11 @@ async def get_generation(
         "source_url": row["source_url"],
         "product_brief": product_brief,
         "agent_motion_suggestion": row["agent_motion_suggestion"],
-        "director_tips": director_tips
+        "director_tips": director_tips,
+        "critic_scores": (json.loads(row["critic_scores"]) if isinstance(row["critic_scores"], str) else dict(row["critic_scores"])) if row["critic_scores"] else {},
+        "routed_frameworks": list(row["routed_frameworks"]) if row["routed_frameworks"] else [],
+        "raw_scripts": (json.loads(row["raw_scripts"]) if isinstance(row["raw_scripts"], str) else list(row["raw_scripts"])) if row["raw_scripts"] else [],
+        "selected_script_id": row["selected_script_id"]
     }
 
 # -------------------------------------------------------------------------

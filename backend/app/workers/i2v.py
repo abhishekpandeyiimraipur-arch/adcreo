@@ -47,24 +47,19 @@ ENV_PRESETS: dict[int, str] = {
 # Wan:   best for organic fluid motion + cheapest (drift, unbox, liquid).
 # Fallback is always Wan — never fail completely.
 ARCHETYPE_MODEL_MAP: dict[str, list[str]] = {
-    "orbit":       ["fal-ai/kling-video/v1.6/standard/image-to-video",
-                    "fal-ai/wan-i2v"],
-    "drift":       ["fal-ai/wan-i2v",
-                    "fal-ai/minimax-video/image-to-video"],
-    "hero_zoom":   ["fal-ai/kling-video/v1.6/standard/image-to-video",
-                    "fal-ai/wan-i2v"],
-    "unbox":       ["fal-ai/wan-i2v",
-                    "fal-ai/minimax-video/image-to-video"],
-    "liquid_pour": ["fal-ai/wan-i2v",
-                    "fal-ai/minimax-video/image-to-video"],
+    "orbit":       ["fal-ai/wan-i2v", "atlascloud/wan-2.2/image-to-video"],
+    "drift":       ["fal-ai/wan-i2v", "atlascloud/wan-2.2/image-to-video"],
+    "hero_zoom":   ["fal-ai/wan-i2v", "atlascloud/wan-2.2/image-to-video"],
+    "unbox":       ["fal-ai/wan-i2v", "atlascloud/wan-2.2/image-to-video"],
+    "liquid_pour": ["fal-ai/wan-i2v", "atlascloud/wan-2.2/image-to-video"],
 }
 
 DEFAULT_MODELS = [
+    "atlascloud/wan-2.2/image-to-video",
     "fal-ai/wan-i2v",
-    "fal-ai/minimax-video/image-to-video",
 ]
 
-I2V_TIMEOUT_S = 180.0
+I2V_TIMEOUT_S = 240.0
 
 
 # ── Worker ────────────────────────────────────────────────────────────────────
@@ -169,12 +164,13 @@ class WorkerI2V:
                 self.gateway.route(
                     capability="i2v",
                     input_data={
-                        "image_url": isolated_png_url,
-                        "model":     primary,
-                        "prompt":    prompt,
-                        "duration":  9,
-                        "seed":      self._generate_seed(attempt),
-                        "gen_id":    gen_id,
+                        "image_url":    isolated_png_url,
+                        "model":        primary,
+                        "prompt":       prompt,
+                        "duration":     9,
+                        "seed":         self._generate_seed(attempt),
+                        "gen_id":       gen_id,
+                        "aspect_ratio": "9:16",
                     },
                 ),
                 timeout=I2V_TIMEOUT_S,
@@ -193,12 +189,13 @@ class WorkerI2V:
                     self.gateway.route(
                         capability="i2v",
                         input_data={
-                            "image_url": isolated_png_url,
-                            "model":     fallback,
-                            "prompt":    prompt,
-                            "duration":  9,
-                            "seed":      self._generate_seed(attempt),
-                            "gen_id":    gen_id,
+                            "image_url":    isolated_png_url,
+                            "model":        fallback,
+                            "prompt":       prompt,
+                            "duration":     9,
+                            "seed":         self._generate_seed(attempt),
+                            "gen_id":       gen_id,
+                            "aspect_ratio": "9:16",
                         },
                     ),
                     timeout=I2V_TIMEOUT_S,

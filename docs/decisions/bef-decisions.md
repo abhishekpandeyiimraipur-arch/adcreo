@@ -67,3 +67,16 @@ Authority: BEF §15.7 row 1 criterion (iii)
 Resolved by: Abhishek (Founder)
 
 ---
+
+## 2026-05-21 — d2c_fashion added to GreenZone (D-003)
+
+Context: worker_extract.py GREEN_ZONE_SET contained d2c_fashion
+which was not in [PRD-GREENZONE] or [TDD-ENUMS] 5-category definition.
+Resolution: Founder decision — keep d2c_fashion as valid GreenZone
+category. Added to green_zone_category ENUM via migration
+V202605211400. PRD V4 and TDD V5 acknowledged as needing doc update
+(non-blocking for launch). Worker GREEN_ZONE_SET already correct.
+Authority: PRD [PRD-GREENZONE] + TDD [TDD-ENUMS] — doc update pending
+Resolved by: Abhishek (Founder)
+
+---

@@ -15,8 +15,7 @@ from datetime import datetime, timezone
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# ── Module-level singletons ──
-gateway = ModelGateway()
+# ── Module-level singletons (gateway comes from app.state) ──
 compliance_gate = ComplianceGate()
 prompt_catalog = PromptCatalog()
 
@@ -67,6 +66,7 @@ async def chat(
         current_script = Script(**safe_scripts[idx])
 
     # ── STEP 3: Instantiate and run CopilotChain ──
+    gateway = request.app.state.gateway
     cost_guard = CostGuard(
         redis_db2=request.app.state.redis_db2,
         db_pool=request.app.state.db_pool,

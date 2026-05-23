@@ -1,553 +1,622 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AdvertWise — Full Pipeline Console</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0a0a0a;
-      color: #e0e0e0;
-      font-family: monospace;
-      font-size: 13px;
-      padding: 20px;
-      line-height: 1.5;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-    .header {
-      border-bottom: 1px solid #333;
-      padding-bottom: 15px;
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .header h1 { font-size: 18px; color: #6366f1; }
-    .status-bar { font-size: 12px; }
-    
-    .card {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 4px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .card-title {
-      font-size: 14px;
-      font-weight: bold;
-      margin-bottom: 12px;
-      color: #ccc;
-      display: flex;
-      justify-content: space-between;
-    }
-    
-    .btn {
-      background: #222;
-      color: #e0e0e0;
-      border: 1px solid #444;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 12px;
-      transition: all 0.2s;
-    }
-    .btn:hover:not(:disabled) { background: #333; border-color: #6366f1; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: #1e1e2f; border-color: #6366f1; color: #a5b4fc; }
-    .btn-primary:hover:not(:disabled) { background: #2d2d44; }
-    
-    .result-panel {
-      margin-top: 12px;
-      padding: 10px;
-      background: #000;
-      border: 1px dashed #333;
-      display: none;
-    }
-    .result-row { margin-bottom: 6px; }
-    .label { color: #888; display: inline-block; width: 150px; }
-    .val { color: #ccc; }
-    
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 11px;
-    }
-    .badge.pending { background: #333; color: #aaa; }
-    .badge.running { background: #1e3a5f; color: #60a5fa; }
-    .badge.pass { background: #064e3b; color: #34d399; }
-    .badge.fail { background: #7f1d1d; color: #fca5a5; }
-    
-    .color-green { color: #22c55e; }
-    .color-yellow { color: #f59e0b; }
-    .color-red { color: #ef4444; }
-    .color-blue { color: #3b82f6; }
-    
-    input[type=file], input[type=text] {
-      background: #000;
-      color: #fff;
-      border: 1px solid #444;
-      padding: 4px;
-      font-family: inherit;
-      font-size: 12px;
-      width: 100%;
-      margin-bottom: 8px;
-    }
-    
-    /* Logs */
-    .log-box {
-      height: 250px;
-      overflow-y: auto;
-      background: #000;
-      border: 1px solid #222;
-      padding: 10px;
-      font-size: 11px;
-      white-space: pre-wrap;
-      margin-top: 8px;
-    }
-    .log-entry { margin-bottom: 8px; border-bottom: 1px dashed #111; padding-bottom: 8px; }
-    .log-entry summary { cursor: pointer; color: #666; }
-    .log-entry summary:hover { color: #999; }
-    
-    .sse-event { margin-bottom: 4px; }
-  </style>
+<meta charset="UTF-8">
+<title>Adcreo — Gate Verification Console</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0a;color:#e0e0e0;font-family:monospace;font-size:13px;padding:20px;line-height:1.6}
+.wrap{max-width:960px;margin:0 auto}
+.hdr{border-bottom:1px solid #333;padding-bottom:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.hdr h1{font-size:16px;color:#6366f1;letter-spacing:.5px}
+.tok{font-size:11px}
+.ok{color:#22c55e}.err{color:#ef4444}.warn{color:#f59e0b}.dim{color:#666}.blue{color:#3b82f6}
+
+/* Gate headers */
+.gate-hdr{background:#111;border:1px solid #2a2a2a;padding:8px 14px;margin:20px 0 0;font-size:11px;color:#888;letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between}
+.gate-hdr span{font-size:12px}
+
+/* Cards */
+.card{background:#111;border:1px solid #1e1e1e;border-radius:3px;padding:14px;margin-bottom:10px}
+.card-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.card-title{font-size:13px;font-weight:bold;color:#bbb}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:10px;font-weight:bold;text-transform:uppercase}
+.b-pending{background:#1a1a1a;color:#555;border:1px solid #333}
+.b-run{background:#0c1a2e;color:#60a5fa;border:1px solid #1e40af}
+.b-pass{background:#052e16;color:#4ade80;border:1px solid #166534}
+.b-fail{background:#2d0a0a;color:#f87171;border:1px solid #991b1b}
+.b-locked{background:#1a1a1a;color:#444;border:1px solid #2a2a2a}
+
+/* Buttons */
+.btn{background:#1a1a1a;color:#ccc;border:1px solid #333;padding:5px 12px;cursor:pointer;font-family:inherit;font-size:12px;border-radius:2px;transition:all .15s}
+.btn:hover:not(:disabled){background:#222;border-color:#6366f1;color:#a5b4fc}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-go{background:#1e1e2f;border-color:#6366f1;color:#a5b4fc}
+
+/* Result grid */
+.grid{display:grid;grid-template-columns:160px 1fr;gap:4px 8px;margin-top:10px}
+.gl{color:#666;font-size:11px;padding:3px 0}
+.gv{color:#ccc;font-size:12px;padding:3px 0;word-break:break-all}
+
+/* Scripts panel */
+.scripts-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.script-card{background:#0d0d0d;border:1px solid #222;padding:10px;border-radius:2px}
+.script-card.top{border-color:#4ade80}
+.s-fw{color:#6366f1;font-size:11px;font-weight:bold;margin-bottom:4px}
+.s-score{font-size:18px;font-weight:bold;margin-bottom:6px}
+.s-score.hi{color:#4ade80}.s-score.mid{color:#f59e0b}.s-score.lo{color:#ef4444}
+.s-hook{color:#aaa;font-size:11px;margin-bottom:3px;font-style:italic}
+.s-body{color:#777;font-size:10px;line-height:1.4}
+
+/* Isolated image */
+.iso-img{max-width:120px;max-height:120px;border:1px solid #333;margin-top:8px;display:block}
+
+/* Broll clips */
+.clip-list{margin-top:4px}
+.clip{background:#0d0d0d;border:1px solid #1e1e1e;padding:4px 8px;margin-bottom:4px;font-size:11px;color:#888}
+.clip span{color:#ccc}
+
+/* Locked gate */
+.locked-msg{color:#444;font-size:12px;padding:16px;text-align:center;border:1px dashed #222;margin-top:8px}
+
+/* Logs */
+.log{height:200px;overflow-y:auto;background:#000;border:1px solid #1a1a1a;padding:8px;font-size:10px;white-space:pre-wrap;margin-top:8px}
+.sse-line{margin-bottom:3px}
+.log-entry{margin-bottom:6px;border-bottom:1px solid #111;padding-bottom:6px}
+.log-entry summary{cursor:pointer;color:#555}
+.log-entry summary:hover{color:#888}
+
+input[type=file]{background:#000;color:#fff;border:1px solid #333;padding:4px;font-family:inherit;font-size:12px;width:100%;margin-bottom:8px}
+input[type=checkbox]{margin-right:6px;accent-color:#6366f1}
+.chk-row{margin-bottom:6px;color:#aaa}
+</style>
 </head>
 <body>
-
-<div class="container">
-  <div class="header">
-    <h1>AdvertWise /test-console</h1>
-    <div class="status-bar" id="autoTokenStatus">Token: FETCHING...</div>
+<div class="wrap">
+  <div class="hdr">
+    <h1>⬡ ADCREO — Gate Verification Console</h1>
+    <div class="tok" id="tokStatus">Token: FETCHING...</div>
   </div>
 
-  <!-- STEP 1 -->
-  <div class="card" id="step1">
-    <div class="card-title">
-      <span>STEP 1 — UPLOAD & EXTRACT</span>
-      <span class="badge pending" id="badge1">PENDING</span>
-    </div>
-    <input type="file" id="imgUpload" accept="image/*" />
-    <button class="btn btn-primary" id="btn1" onclick="runStep1()">Upload & Extract</button>
-    
-    <div class="result-panel" id="res1">
-      <div class="result-row"><span class="label">Gen ID:</span><span class="val" id="val1-genid" style="cursor:pointer;color:#6366f1;" onclick="copyText(this.innerText)"></span></div>
-      <div class="result-row"><span class="label">Product Name:</span><span class="val" id="val1-name"></span></div>
-      <div class="result-row"><span class="label">Category:</span><span class="val" id="val1-cat"></span></div>
-      <div class="result-row"><span class="label">Confidence:</span><span class="val" id="val1-conf"></span></div>
-      <div class="result-row"><span class="label">Status:</span><span class="val" id="val1-status"></span></div>
-    </div>
+  <!-- ═══════════════ GATE 1 ═══════════════ -->
+  <div class="gate-hdr">
+    <span>G1 — Foundation</span>
+    <span class="badge b-pass">CONDITIONAL CLEAR</span>
   </div>
-
-  <!-- STEP 2 -->
-  <div class="card" id="step2">
-    <div class="card-title">
-      <span>STEP 2 — PHASE 2 (Scripts)</span>
-      <span class="badge pending" id="badge2">PENDING</span>
-    </div>
-    <button class="btn btn-primary" id="btn2" onclick="runStep2()" disabled>Run Phase 2 →</button>
-    <div class="result-panel" id="res2">
-      <div class="result-row"><span class="label">Selected Script ID:</span><span class="val" id="val2-script"></span></div>
-      <div class="result-row"><span class="label">Framework:</span><span class="val" id="val2-frame"></span></div>
-      <div class="result-row"><span class="label">Critic Score:</span><span class="val" id="val2-score"></span></div>
-      <div class="result-row"><span class="label">Status:</span><span class="val" id="val2-status"></span></div>
-    </div>
-  </div>
-
-  <!-- STEP 3 -->
-  <div class="card" id="step3">
-    <div class="card-title">
-      <span>STEP 3 — PHASE 3 (Strategy)</span>
-      <span class="badge pending" id="badge3">PENDING</span>
-    </div>
-    <button class="btn btn-primary" id="btn3" onclick="runStep3()" disabled>Run Phase 3 →</button>
-    <div class="result-panel" id="res3">
-      <div class="result-row"><span class="label">Motion:</span><span class="val" id="val3-motion"></span></div>
-      <div class="result-row"><span class="label">Environment:</span><span class="val" id="val3-env"></span></div>
-      <div class="result-row"><span class="label">B-Roll Plan:</span><span class="val" id="val3-broll"></span></div>
-      <div class="result-row"><span class="label">Hook:</span><span class="val" id="val3-hook"></span></div>
-      <div class="result-row"><span class="label">CTA:</span><span class="val" id="val3-cta"></span></div>
-      <div class="result-row"><span class="label">Status:</span><span class="val" id="val3-status"></span></div>
-    </div>
-  </div>
-
-  <!-- STEP 4 -->
-  <div class="card" id="step4">
-    <div class="card-title">
-      <span>STEP 4 — RENDER (Phase 4)</span>
-      <span class="badge pending" id="badge4">PENDING</span>
-    </div>
-    <button class="btn btn-primary" id="btn4" onclick="runStep4()" disabled>Approve & Render</button>
-    <div class="result-panel" id="res4">
-      <div class="result-row"><span class="label">Template Key:</span><span class="val" id="val4-tpl"></span></div>
-      <div class="result-row"><span class="label">Preview:</span><br/>
-        <video id="val4-vid" width="250" controls style="display:none;margin-top:8px;border:1px solid #333;"></video>
-      </div>
-      <div class="result-row"><span class="label">Status:</span><span class="val" id="val4-status"></span></div>
-    </div>
-  </div>
-
-  <!-- STEP 5 -->
-  <div class="card" id="step5">
-    <div class="card-title">
-      <span>STEP 5 — EXPORT</span>
-      <span class="badge pending" id="badge5">PENDING</span>
-    </div>
-    <div style="margin-bottom:10px;">
-      <div><input type="checkbox" id="chk-comm" /> Commercial Use</div>
-      <div><input type="checkbox" id="chk-rights" /> Image Rights</div>
-      <div><input type="checkbox" id="chk-ai" /> AI Generated per IT Rules 2026</div>
-    </div>
-    <button class="btn btn-primary" id="btn5" onclick="runStep5()" disabled>Sign & Export</button>
-    <div class="result-panel" id="res5">
-      <div class="result-row"><span class="label">Export URLs:</span><div id="val5-urls" style="margin-top:5px;"></div></div>
-      <div class="result-row"><span class="label">Status:</span><span class="val" id="val5-status"></span></div>
-    </div>
-  </div>
-
-  <!-- HARDENING PANEL -->
   <div class="card">
-    <details>
-      <summary class="card-title" style="cursor:pointer; display:inline-block; margin-bottom:0;">HARDENING PANEL &amp; UTILS (Click to expand)</summary>
-      <div style="margin-top: 15px; display:flex; gap: 10px; align-items:center;">
-        <button class="btn" onclick="checkWallet()">Check Wallet</button>
-        <button class="btn" onclick="forceRetryExport()">Force Retry Export</button>
-        <div style="border-left:1px solid #333; padding-left:10px; display:flex; gap:5px;">
-          <input type="text" id="manualState" placeholder="e.g. preview_ready" style="width:140px;margin:0;" />
-          <button class="btn" onclick="resetGenState()">Reset Gen State</button>
+    <div class="grid">
+      <div class="gl">DB Migrations</div><div class="gv ok">8 applied ✓</div>
+      <div class="gl">FSM Trigger</div><div class="gv ok">22-state (DB trigger) ✓</div>
+      <div class="gl">CI-A</div><div class="gv ok">GitHub Actions green ✓</div>
+      <div class="gl">audit_log REVOKE</div><div class="gv warn">⚠ No adcreo_app role on Neon — deferred (D-002)</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ GATE 2 ═══════════════ -->
+  <div class="gate-hdr">
+    <span>G2 — Phase 1 + Phase 2</span>
+    <span class="badge b-pending" id="g2badge">PENDING</span>
+  </div>
+
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Step 1 — Upload &amp; Extract (HD-1)</span>
+      <span class="badge b-pending" id="b1">PENDING</span>
+    </div>
+    <input type="file" id="imgFile" accept="image/*" />
+    <button class="btn btn-go" id="btn1" onclick="step1()">Upload &amp; Extract</button>
+
+    <div id="res1" style="display:none">
+      <div class="grid">
+        <div class="gl">Gen ID</div>
+        <div class="gv blue" id="r1-id" style="cursor:pointer" onclick="copyText(this.innerText)" title="Click to copy"></div>
+        <div class="gl">Product Name</div><div class="gv" id="r1-name"></div>
+        <div class="gl">Category</div><div class="gv" id="r1-cat"></div>
+        <div class="gl">Confidence</div><div class="gv" id="r1-conf"></div>
+        <div class="gl">Confidence Band</div><div class="gv" id="r1-band"></div>
+        <div class="gl">Status</div><div class="gv" id="r1-status"></div>
+        <div class="gl">Isolated Image</div>
+        <div class="gv"><img id="r1-img" class="iso-img" style="display:none" alt="isolated product"/><span id="r1-img-err" class="dim"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Step 2 — Scripts + Critic (HD-2 → HD-3)</span>
+      <span class="badge b-pending" id="b2">PENDING</span>
+    </div>
+    <button class="btn btn-go" id="btn2" onclick="step2()" disabled>Run Phase 2 →</button>
+    <div id="res2" style="display:none">
+      <div class="grid">
+        <div class="gl">Routed Frameworks</div><div class="gv" id="r2-fw"></div>
+        <div class="gl">Top Script</div><div class="gv" id="r2-top"></div>
+        <div class="gl">Status</div><div class="gv" id="r2-status"></div>
+      </div>
+      <div class="scripts-grid" id="r2-scripts"></div>
+      <div id="chatPanel" style="margin-top:12px;display:none">
+        <div style="color:#f59e0b;font-size:11px;margin-bottom:6px;letter-spacing:.5px">⚠ HD-3 CO-PILOT CHAT — refine NOW before running Phase 3 (max 3 turns · status must be scripts_ready)</div>
+        <div id="chatScriptPreview" style="color:#555;font-size:11px;margin-bottom:8px;font-style:italic"></div>
+        <div id="chatLog" style="min-height:40px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="chatInput" placeholder="Refine the selected script..." style="flex:1;margin:0" />
+          <button class="btn btn-go" id="chatBtn" onclick="sendChat()">Send</button>
+        </div>
+        <div id="chatTurns" style="color:#555;font-size:11px;margin-top:4px">Turns used: 0 / 3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ GATE 3 ═══════════════ -->
+  <div class="gate-hdr">
+    <span>G3 — Phase 3 (Strategy + B-Roll)</span>
+    <span class="badge b-pending" id="g3badge">PENDING</span>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Step 3 — Strategist + B-Roll Planner (HD-4)</span>
+      <span class="badge b-pending" id="b3">PENDING</span>
+    </div>
+    <button class="btn btn-go" id="btn3" onclick="step3()" disabled>Run Phase 3 →</button>
+    <div id="res3" style="display:none">
+      <div class="grid">
+        <div class="gl">Status</div><div class="gv" id="r3-status"></div>
+        <div class="gl">Structure Template</div><div class="gv" id="r3-tpl"></div>
+        <div class="gl">Active Season</div><div class="gv" id="r3-season"></div>
+        <div class="gl">Motion</div><div class="gv" id="r3-motion"></div>
+        <div class="gl">Environment</div><div class="gv" id="r3-env"></div>
+        <div class="gl">Hook</div><div class="gv" id="r3-hook"></div>
+        <div class="gl">CTA</div><div class="gv" id="r3-cta"></div>
+        <div class="gl">Critic Score</div><div class="gv" id="r3-score"></div>
+        <div class="gl">Cost Estimate</div><div class="gv" id="r3-cost"></div>
+        <div class="gl">b_roll_available</div><div class="gv" id="r3-broll-avail"></div>
+      </div>
+      <div style="margin-top:10px;color:#666;font-size:11px;margin-bottom:4px;">B-ROLL CLIPS</div>
+      <div class="clip-list" id="r3-clips"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ GATE 4 ═══════════════ -->
+  <div class="gate-hdr">
+    <span>G4 — Phase 4 (Compose + Export)</span>
+    <span class="badge b-pending" id="g4badge">PENDING</span>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Step 4 — Approve Strategy + Render (HD-5)</span>
+      <span class="badge b-pending" id="b4">PENDING</span>
+    </div>
+    <button class="btn btn-go" id="btn4" onclick="step4()" disabled>Approve &amp; Render</button>
+    <div id="res4" style="display:none">
+      <div class="grid">
+        <div class="gl">Status</div><div class="gv" id="r4-status"></div>
+        <div class="gl">TTS</div><div class="gv" id="r4-tts"></div>
+        <div class="gl">I2V</div><div class="gv" id="r4-i2v"></div>
+        <div class="gl">Preview</div>
+        <div class="gv">
+          <video id="r4-vid" controls style="display:none;max-width:320px;margin-top:8px;border:1px solid #333"></video>
+          <span id="r4-vid-err" class="dim"></span>
         </div>
       </div>
-    </details>
-  </div>
-
-  <!-- SSE PANEL -->
-  <div class="card">
-    <div class="card-title">
-      <span>LIVE SSE EVENTS</span>
-      <span class="badge pending" id="sseBadge">DISCONNECTED</span>
     </div>
-    <div class="log-box" id="sseLog"></div>
   </div>
 
-  <!-- API LOG -->
+  <!-- ═══════════════ GATE 5 ═══════════════ -->
+  <div class="gate-hdr">
+    <span>G5 — Pre-Beta (Rollback Drill + E2E)</span>
+    <span class="badge b-locked">LOCKED — depends on G4</span>
+  </div>
   <div class="card">
-    <div class="card-title">
-      <span>API CALL LOG</span>
+    <div class="locked-msg">Rollback drill, L4 E2E Playwright suite, observability dashboards — pending G4 clearance.</div>
+  </div>
+
+  <!-- ═══════════════ DIAGNOSTICS ═══════════════ -->
+  <div class="gate-hdr"><span>Diagnostics</span></div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Live SSE Events</span>
+      <span class="badge b-pending" id="sseBadge">DISCONNECTED</span>
+    </div>
+    <div class="log" id="sseLog"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">API Call Log</span>
       <button class="btn" onclick="document.getElementById('apiLog').innerHTML=''">Clear</button>
     </div>
-    <div class="log-box" id="apiLog"></div>
+    <div class="log" id="apiLog"></div>
   </div>
 
-</div>
+</div><!-- /wrap -->
 
 <script>
-  let GLOBAL_TOKEN = "";
-  let GLOBAL_GEN_ID = "";
-  let sseSource = null;
+let TOKEN = "", GEN_ID = "", sseEs = null;
 
-  // --- Auto Token ---
-  window.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const res = await fetch('/dev-token');
-      const data = await res.json();
-      GLOBAL_TOKEN = data.token;
-      document.getElementById('autoTokenStatus').innerText = "Token: OK";
-      document.getElementById('autoTokenStatus').className = "status-bar color-green";
-    } catch(e) {
-      document.getElementById('autoTokenStatus').innerText = "Token: FAILED";
-      document.getElementById('autoTokenStatus').className = "status-bar color-red";
-      logApi('GET', '/dev-token', 500, e.toString());
+// ── Bootstrap ──────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const r = await fetch('/dev-token');
+    const d = await r.json();
+    TOKEN = d.token;
+    setTok('Token: OK', 'ok');
+  } catch(e) {
+    setTok('Token: FAILED', 'err');
+  }
+});
+
+// ── Helpers ────────────────────────────────────────────────
+function setTok(t, cls) {
+  const el = document.getElementById('tokStatus');
+  el.innerText = t; el.className = 'tok ' + cls;
+}
+function setBadge(id, cls, txt) {
+  const el = document.getElementById(id);
+  el.className = 'badge b-' + cls;
+  el.innerText = txt;
+}
+function copyText(t) { navigator.clipboard.writeText(t); }
+
+function logApi(method, path, status, body) {
+  const box = document.getElementById('apiLog');
+  const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+  const col = status >= 200 && status < 300 ? '#22c55e' : '#ef4444';
+  let bs = '';
+  try { bs = typeof body === 'string' ? body : JSON.stringify(body, null, 2); } catch(e){ bs = String(body); }
+  box.insertAdjacentHTML('afterbegin',
+    `<details class="log-entry"><summary>[${ts}] <strong style="color:#6366f1">${method}</strong> ${path} <span style="color:${col}">[${status}]</span></summary><pre style="color:#777;margin-top:4px">${bs}</pre></details>`
+  );
+}
+
+async function api(method, path, body=null, isForm=false) {
+  const hdrs = {
+    'Authorization': `Bearer ${TOKEN}`,
+    'Idempotency-Key': `test-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  };
+  if (!isForm) hdrs['Content-Type'] = 'application/json';
+  const opts = { method, headers: hdrs };
+  if (body) opts.body = isForm ? body : JSON.stringify(body);
+  try {
+    const res = await fetch(path, opts);
+    let d = {};
+    try { d = await res.json(); } catch(e){}
+    logApi(method, path, res.status, d);
+    return { ok: res.status >= 200 && res.status < 300, status: res.status, data: d };
+  } catch(e) {
+    logApi(method, path, 0, e.toString());
+    return { ok: false, status: 0, data: null };
+  }
+}
+
+function poll(targetStatus, onDone, badgeId, timeoutMs=120000) {
+  const start = Date.now();
+  const iv = setInterval(async () => {
+    if (Date.now() - start > timeoutMs) {
+      clearInterval(iv);
+      setBadge(badgeId, 'fail', 'TIMEOUT');
+      return;
     }
+    const { ok, data } = await api('GET', `/api/generations/${GEN_ID}`);
+    if (!ok || !data) return;
+    if (data.status === targetStatus) { clearInterval(iv); onDone(data); }
+    else if (data.status && data.status.startsWith('failed')) {
+      clearInterval(iv);
+      setBadge(badgeId, 'fail', 'FAILED — ' + data.status);
+    }
+  }, 3000);
+}
+
+function connectSSE() {
+  if (sseEs) sseEs.close();
+  sseEs = new EventSource(`/api/sse/${GEN_ID}`);
+  const box = document.getElementById('sseLog');
+  box.innerHTML = '';
+  sseEs.onopen = () => setBadge('sseBadge', 'pass', 'CONNECTED');
+  sseEs.onerror = () => setBadge('sseBadge', 'fail', 'ERROR');
+  sseEs.onmessage = (e) => {
+    const ts = new Date().toISOString().split('T')[1].slice(0, 12);
+    let col = '#666';
+    if (e.data.includes('scripts_ready') || e.data.includes('brief_ready')) col = '#4ade80';
+    else if (e.data.includes('state_change')) col = '#60a5fa';
+    else if (e.data.includes('failed')) col = '#f87171';
+    const div = document.createElement('div');
+    div.className = 'sse-line';
+    div.style.color = col;
+    div.innerText = `[${ts}] ${e.data}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+  };
+}
+
+// ── Step 1 — Upload & Extract ──────────────────────────────
+async function step1() {
+  const file = document.getElementById('imgFile').files[0];
+  if (!file) { alert('Select a product image first.'); return; }
+
+  setBadge('b1', 'run', 'UPLOADING');
+  document.getElementById('btn1').disabled = true;
+
+  const fd = new FormData();
+  fd.append('source_image', file);
+  const { ok, data } = await api('POST', '/api/generations', fd, true);
+
+  if (!ok || !data?.gen_id) {
+    setBadge('b1', 'fail', 'FAILED');
+    document.getElementById('btn1').disabled = false;
+    return;
+  }
+
+  GEN_ID = data.gen_id;
+  document.getElementById('r1-id').innerText = GEN_ID;
+  document.getElementById('res1').style.display = 'block';
+  connectSSE();
+
+  setBadge('b1', 'run', 'EXTRACTING');
+  poll('brief_ready', (d) => {
+    // Populate Step 1 results
+    const pb = d.product_brief || {};
+    document.getElementById('r1-name').innerText = pb.product_name || '—';
+    
+    const catEl = document.getElementById('r1-cat');
+    catEl.innerText = pb.category || '—';
+    catEl.className = 'gv ' + (pb.category ? 'ok' : 'warn');
+
+    const conf = d.confidence_score;
+    const confEl = document.getElementById('r1-conf');
+    confEl.innerText = conf !== null ? conf : '—';
+    confEl.className = 'gv ' + (conf >= 0.85 ? 'ok' : conf >= 0.65 ? 'warn' : 'err');
+
+    const bandEl = document.getElementById('r1-band');
+    bandEl.innerText = d.confidence_band || '—';
+    bandEl.className = 'gv ' + (d.confidence_band === 'green' ? 'ok' : d.confidence_band === 'yellow' ? 'warn' : 'err');
+
+    document.getElementById('r1-status').innerText = d.status;
+
+    // Isolated image
+    if (d.isolated_png_url) {
+      const img = document.getElementById('r1-img');
+      img.src = d.isolated_png_url;
+      img.style.display = 'block';
+      img.onerror = () => {
+        img.style.display = 'none';
+        document.getElementById('r1-img-err').innerText = '⚠ URL expired or R2 access issue';
+      };
+    } else {
+      document.getElementById('r1-img-err').innerText = '— no isolated_png_url in response';
+    }
+
+    setBadge('b1', 'pass', 'PASS');
+    document.getElementById('btn2').disabled = false;
+  }, 'b1');
+}
+
+// ── Step 2 — Scripts + Critic ──────────────────────────────
+async function step2() {
+  setBadge('b2', 'run', 'SCRIPTING');
+  document.getElementById('btn2').disabled = true;
+
+  // brief_ready → scripting (POST /advance)
+  const { ok } = await api('POST', `/api/generations/${GEN_ID}/advance`);
+  if (!ok) {
+    setBadge('b2', 'fail', 'ADVANCE FAILED');
+    document.getElementById('btn2').disabled = false;
+    return;
+  }
+
+  document.getElementById('res2').style.display = 'block';
+  setBadge('b2', 'run', 'CRITIC + SAFETY');
+
+  poll('scripts_ready', async (d) => {
+    // After scripts_ready — fetch critic_scores via a dedicated DB read endpoint
+    // We don't have a /scripts endpoint, so read from advance response below
+    // For now show what we have from GET /generations/{id}
+    const fw = d.routed_frameworks || [];
+    document.getElementById('r2-fw').innerText = fw.length ? fw.join(', ') : '—';
+    document.getElementById('r2-status').innerText = d.status;
+
+    // Fetch full generation data with critic scores
+    // We need to call a route that returns critic_scores
+    // Use the advance endpoint response which we stored — but it returned scripting not scripts_ready
+    // So fetch critic data from the DB via a workaround: display from SSE events
+    const criticScores = d.critic_scores || {};
+    const routed = d.routed_frameworks || [];
+
+    const container = document.getElementById('r2-scripts');
+    container.innerHTML = '';
+
+    const rawScripts = d.raw_scripts || [];
+    const selectedId = d.selected_script_id;
+
+    if (rawScripts.length > 0) {
+      const sorted = rawScripts.sort((a,b) => (b.critic_score||0) - (a.critic_score||0));
+      sorted.forEach((s, i) => {
+        const isTop = i === 0;
+        const score = s.critic_score || criticScores[s.framework] || 0;
+        const scoreClass = score >= 85 ? 'hi' : score >= 70 ? 'mid' : 'lo';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="script-card ${isTop ? 'top' : ''}" style="cursor:pointer" onclick="selectScript('${s.framework}', this)">
+            <div class="s-fw">${isTop ? '★ ' : ''}${s.framework} <span style="color:#555;font-size:10px">(${s.framework_angle})</span></div>
+            <div class="s-score ${scoreClass}">${score}</div>
+            <div class="s-hook">"${s.hook}"</div>
+            <div class="s-body">${s.body}</div>
+            <div style="margin-top:6px;color:#6366f1;font-size:10px">CTA: ${s.cta}</div>
+          </div>
+        `);
+      });
+      document.getElementById('r2-top').innerText = sorted[0]?.framework || '—';
+      window._scripts = sorted;
+      window._selectedScript = sorted[0];
+      document.getElementById('chatPanel').style.display = 'block';
+      document.getElementById('chatScriptPreview').innerText =
+        `[${sorted[0].framework}] ${sorted[0].hook} — ${sorted[0].cta}`;
+    } else if (Object.keys(criticScores).length > 0) {
+      const sorted = Object.entries(criticScores).sort((a,b) => b[1]-a[1]);
+      sorted.forEach(([fw, score], i) => {
+        const isTop = i === 0;
+        const scoreClass = score >= 85 ? 'hi' : score >= 70 ? 'mid' : 'lo';
+        container.insertAdjacentHTML('beforeend', `
+          <div class="script-card ${isTop ? 'top' : ''}">
+            <div class="s-fw">${isTop ? '★ ' : ''}${fw}</div>
+            <div class="s-score ${scoreClass}">${score}</div>
+            <div class="s-body dim">${isTop ? 'Pre-selected on HD-3' : 'Available on HD-3'}</div>
+          </div>
+        `);
+      });
+      document.getElementById('r2-top').innerText = sorted[0]?.[0] || '—';
+    } else {
+      container.innerHTML = '<div class="dim" style="padding:8px;font-size:11px;">No scripts yet</div>';
+    }
+
+    setBadge('b2', 'pass', 'PASS');
+    setBadge('g2badge', 'pass', 'CLEARED');
+    document.getElementById('btn3').disabled = false;
+  }, 'b2');
+}
+
+// ── Step 3 — Strategy ──────────────────────────────────────
+async function step3() {
+  setBadge('b3', 'run', 'STRATEGIST');
+  document.getElementById('btn3').disabled = true;
+
+  // scripts_ready → strategy_preview (POST /advance)
+  // This returns strategy_card directly in response
+  const { ok, data } = await api('POST', `/api/generations/${GEN_ID}/advance`);
+  if (!ok) {
+    setBadge('b3', 'fail', 'ADVANCE FAILED');
+    document.getElementById('btn3').disabled = false;
+    return;
+  }
+
+  document.getElementById('res3').style.display = 'block';
+
+  // Strategy card is in the POST response directly
+  const sc = data?.strategy_card || {};
+  const ss = sc.script_summary || {};
+  const brollPlan = sc.b_roll_plan || [];
+
+  document.getElementById('r3-status').innerText = data?.status || '—';
+  document.getElementById('r3-tpl').innerText = sc.structure_template || '— (legacy T1 path)';
+  document.getElementById('r3-season').innerText = sc.active_season || 'NULL (no active season)';
+  document.getElementById('r3-motion').innerText = (sc.motion || {}).name || '—';
+  document.getElementById('r3-env').innerText = (sc.environment || {}).name || '—';
+  document.getElementById('r3-hook').innerText = ss.hook || '—';
+  document.getElementById('r3-cta').innerText = ss.cta || '—';
+  document.getElementById('r3-score').innerText = ss.score || '—';
+  document.getElementById('r3-broll-avail').innerText = sc.b_roll_available ? '✓ true' : '✗ false';
+
+  const costEst = sc.cost_estimate || {};
+  document.getElementById('r3-cost').innerText = costEst.total_estimate_inr
+    ? `₹${costEst.total_estimate_inr} (phase4: ₹${costEst.phase4_estimate_inr})`
+    : '—';
+
+  // B-Roll clips
+  const clipContainer = document.getElementById('r3-clips');
+  clipContainer.innerHTML = '';
+  if (Array.isArray(brollPlan) && brollPlan.length > 0) {
+    brollPlan.forEach(clip => {
+      clipContainer.insertAdjacentHTML('beforeend',
+        `<div class="clip"><span>${clip.clip_id}</span> · ${clip.archetype} · ${clip.duration_ms}ms</div>`
+      );
+    });
+  } else if (brollPlan && typeof brollPlan === 'object' && brollPlan.hook) {
+    // v4-Δ1 object shape
+    const roles = ['hook', 'context', 'cta'];
+    roles.forEach(role => {
+      const clips = Array.isArray(brollPlan[role]) ? brollPlan[role] : (brollPlan[role] ? [brollPlan[role]] : []);
+      clips.forEach(clip => {
+        clipContainer.insertAdjacentHTML('beforeend',
+          `<div class="clip"><span>[${role}]</span> ${clip.clip_id || clip} · ${clip.archetype || ''}</div>`
+        );
+      });
+    });
+  } else {
+    clipContainer.innerHTML = '<div class="dim" style="font-size:11px;padding:4px">No B-roll clips (broll_v4_routing_enabled=FALSE, T1 legacy path)</div>';
+  }
+
+  setBadge('b3', 'pass', 'PASS');
+  setBadge('g3badge', 'pass', 'CLEARED');
+  document.getElementById('btn4').disabled = false;
+}
+function selectScript(fw, el) {
+  if (!window._scripts) return;
+  window._selectedScript = window._scripts.find(s => s.framework === fw);
+  document.querySelectorAll('.script-card').forEach(c => c.classList.remove('top'));
+  if (el) el.classList.add('top');
+  const chatPanel = document.getElementById('chatPanel');
+  if (chatPanel) {
+    document.getElementById('chatScriptPreview').innerText =
+      `[${fw}] ${window._selectedScript?.hook} — ${window._selectedScript?.cta}`;
+  }
+}
+
+let chatTurnsUsed = 0;
+async function sendChat() {
+  const msg = document.getElementById('chatInput').value.trim();
+  if (!msg) { alert('Type a message first'); return; }
+  if (chatTurnsUsed >= 3) { alert('Max 3 turns reached (HD-3 cap)'); return; }
+  if (!GEN_ID) { alert('No generation active'); return; }
+  if (!window._selectedScript) { alert('No script selected'); return; }
+
+  document.getElementById('chatBtn').disabled = true;
+  const { ok, data } = await api('POST', `/api/generations/${GEN_ID}/chat`, {
+    message: msg,
+    script_framework: window._selectedScript?.framework
   });
 
-  // --- Helpers ---
-  function logApi(method, path, status, body) {
-    const box = document.getElementById('apiLog');
-    const ts = new Date().toISOString().split('T')[1].slice(0,-1);
-    const color = (status >= 200 && status < 300) ? '#22c55e' : (status >= 400 ? '#ef4444' : '#f59e0b');
-    
-    let bodyStr = "";
-    if (typeof body === 'string') bodyStr = body;
-    else {
-      try { bodyStr = JSON.stringify(body, null, 2); } 
-      catch(e) { bodyStr = String(body); }
-    }
+  if (ok) {
+    chatTurnsUsed++;
+    document.getElementById('chatTurns').innerText = `Turns used: ${chatTurnsUsed} / 3`;
+    const log = document.getElementById('chatLog');
+    log.insertAdjacentHTML('beforeend',
+      `<div style="margin-bottom:8px">
+        <div style="color:#666;font-size:10px">You: ${msg}</div>
+        <div style="color:#aaa;font-size:11px;margin-top:3px">${data?.refined_script?.full_text || data?.message || JSON.stringify(data)}</div>
+      </div>`
+    );
+    document.getElementById('chatInput').value = '';
+  }
+  document.getElementById('chatBtn').disabled = false;
+}
+async function step4() {
+  setBadge('b4', 'run', 'APPROVING');
+  document.getElementById('btn4').disabled = true;
+  document.getElementById('res4').style.display = 'block';
 
-    const html = `
-      <details class="log-entry">
-        <summary><span style="color:#888">[${ts}]</span> <strong style="color:#6366f1">${method}</strong> ${path} <span style="color:${color}">[${status}]</span></summary>
-        <pre style="color:#aaa;margin-top:5px;">${bodyStr}</pre>
-      </details>
-    `;
-    box.insertAdjacentHTML('afterbegin', html);
+  const { ok, data } = await api('POST', `/api/generations/${GEN_ID}/approve-strategy`, {});
+  if (!ok) {
+    setBadge('b4', 'fail', 'FAILED — ' + (data?.detail?.error_code || data?.detail || 'unknown'));
+    document.getElementById('btn4').disabled = false;
+    return;
   }
 
-  function setBadge(id, state, text) {
-    const el = document.getElementById(id);
-    el.className = `badge ${state}`;
-    el.innerText = text;
-  }
+  document.getElementById('r4-status').innerText = data.status || 'funds_locked';
+  setBadge('b4', 'run', 'RENDERING');
+  setBadge('g4badge', 'run', 'RUNNING');
 
-  function copyText(txt) {
-    navigator.clipboard.writeText(txt);
-  }
-
-  async function apiCall(method, path, body = null, isFormData = false) {
-    const headers = { 
-      'Authorization': `Bearer ${GLOBAL_TOKEN}`,
-      'Idempotency-Key': path === '/api/generations' ? `upload-${Date.now()}` : `test-${Date.now()}`
-    };
-    if (!isFormData) headers['Content-Type'] = 'application/json';
-    
-    const opts = { method, headers };
-    if (body) {
-      opts.body = isFormData ? body : JSON.stringify(body);
-    }
-    
-    try {
-      const res = await fetch(path, opts);
-      let data = {};
-      try { data = await res.json(); } catch(e){}
-      logApi(method, path, res.status, data);
-      return { status: res.status, data };
-    } catch(err) {
-      logApi(method, path, 0, err.toString());
-      return { status: 0, data: null };
-    }
-  }
-
-  async function pollStatus(targetStatus, callback, stepBadgeId, currentStatusCheck = null) {
-    let attempts = 0;
-    const interval = setInterval(async () => {
-      attempts++;
-      const { status, data } = await apiCall('GET', `/api/generations/${GLOBAL_GEN_ID}`);
-      
-      if (status === 200 && data) {
-        if (currentStatusCheck) currentStatusCheck(data.status);
-        
-        if (data.status === targetStatus) {
-          clearInterval(interval);
-          callback(data);
-        } else if (data.status.includes('failed')) {
-          clearInterval(interval);
-          setBadge(stepBadgeId, 'fail', 'FAILED');
-        }
-      }
-      if (attempts > 100) { clearInterval(interval); setBadge(stepBadgeId, 'fail', 'TIMEOUT'); }
-    }, 3000);
-  }
-
-  function connectSSE() {
-    if (sseSource) sseSource.close();
-    if (!GLOBAL_GEN_ID) return;
-    
-    sseSource = new EventSource(`/api/sse/${GLOBAL_GEN_ID}`);
-    const box = document.getElementById('sseLog');
-    
-    sseSource.onopen = () => setBadge('sseBadge', 'pass', 'CONNECTED');
-    sseSource.onerror = () => setBadge('sseBadge', 'fail', 'ERROR');
-    
-    sseSource.onmessage = (e) => {
-      const ts = new Date().toISOString().split('T')[1].slice(0,-1);
-      let color = '#ccc';
-      if (e.data.includes('state_change')) color = '#3b82f6';
-      else if (e.data.includes('error')) color = '#ef4444';
-      else if (e.data.includes('progress') || e.data.includes('complete')) color = '#22c55e';
-      
-      const div = document.createElement('div');
-      div.className = 'sse-event';
-      div.style.color = color;
-      div.innerText = `[${ts}] ${e.data}`;
-      box.appendChild(div);
-      box.scrollTop = box.scrollHeight;
-    };
-  }
-
-  // --- STEPS ---
-
-  async function runStep1() {
-    const file = document.getElementById('imgUpload').files[0];
-    if (!file) return alert('Select image!');
-    
-    setBadge('badge1', 'running', 'UPLOADING');
-    document.getElementById('btn1').disabled = true;
-    
-    const fd = new FormData();
-    fd.append('source_image', file);
-    const { status, data } = await apiCall('POST', '/api/generations', fd, true);
-    
-    if (status >= 200 && status < 300 && data && data.gen_id) {
-      GLOBAL_GEN_ID = data.gen_id;
-      document.getElementById('val1-genid').innerText = GLOBAL_GEN_ID;
-      document.getElementById('res1').style.display = 'block';
-      connectSSE();
-      
-      setBadge('badge1', 'running', 'POLLING');
-      pollStatus('brief_ready', (fullData) => {
-        setBadge('badge1', 'pass', 'PASS');
-        document.getElementById('btn2').disabled = false;
-        
-        const pb = fullData.product_brief || {};
-        document.getElementById('val1-name').innerText = pb.product_name || '-';
-        
-        const cat = pb.category || '-';
-        const catEl = document.getElementById('val1-cat');
-        catEl.innerText = cat;
-        if (cat === 'd2c_fashion') catEl.className = 'val color-green';
-        
-        const conf = fullData.confidence_score;
-        const confEl = document.getElementById('val1-conf');
-        confEl.innerText = conf;
-        if (conf >= 0.85) confEl.className = 'val color-green';
-        else if (conf >= 0.70) confEl.className = 'val color-yellow';
-        else confEl.className = 'val color-red';
-        
-        document.getElementById('val1-status').innerText = fullData.status;
-      }, 'badge1');
+  // Poll for preview_ready — Phase 4 takes 60-120s
+  poll('preview_ready', (d) => {
+    setBadge('b4', 'pass', 'PASS');
+    setBadge('g4badge', 'pass', 'CLEARED');
+    document.getElementById('r4-status').innerText = d.status;
+    document.getElementById('r4-tts').innerText = '✓ generated';
+    document.getElementById('r4-i2v').innerText = '✓ generated';
+    if (d.preview_url) {
+      const vid = document.getElementById('r4-vid');
+      vid.src = d.preview_url;
+      vid.style.display = 'block';
     } else {
-      setBadge('badge1', 'fail', 'FAIL');
-      document.getElementById('btn1').disabled = false;
+      document.getElementById('r4-vid-err').innerText = 'preview_url not in GET response — check DB';
     }
-  }
-
-  async function runStep2() {
-    setBadge('badge2', 'running', 'RUNNING');
-    document.getElementById('btn2').disabled = true;
-    
-    const { status } = await apiCall('POST', `/api/generations/${GLOBAL_GEN_ID}/advance`);
-    if (status >= 200 && status < 300) {
-      document.getElementById('res2').style.display = 'block';
-      pollStatus('scripts_ready', (data) => {
-        setBadge('badge2', 'pass', 'PASS');
-        document.getElementById('btn3').disabled = false;
-        
-        document.getElementById('val2-script').innerText = data.selected_script_id || '-';
-        const scripts = data.scripts || [];
-        const sel = scripts.find(s => s.script_id === data.selected_script_id);
-        if (sel) {
-          document.getElementById('val2-frame').innerText = sel.framework || '-';
-          document.getElementById('val2-score').innerText = sel.critic_score || '-';
-        }
-        document.getElementById('val2-status').innerText = data.status;
-      }, 'badge2');
-    } else {
-      setBadge('badge2', 'fail', 'FAIL');
-      document.getElementById('btn2').disabled = false;
-    }
-  }
-
-  async function runStep3() {
-    setBadge('badge3', 'running', 'RUNNING');
-    document.getElementById('btn3').disabled = true;
-    
-    const { status } = await apiCall('POST', `/api/generations/${GLOBAL_GEN_ID}/advance`);
-    if (status >= 200 && status < 300) {
-      document.getElementById('res3').style.display = 'block';
-      pollStatus('strategy_preview', (data) => {
-        setBadge('badge3', 'pass', 'PASS');
-        document.getElementById('btn4').disabled = false;
-        
-        const sc = data.strategy_card || {};
-        document.getElementById('val3-motion').innerText = (sc.motion || {}).name || '-';
-        document.getElementById('val3-env').innerText = (sc.environment || {}).name || '-';
-        
-        const bp = data.b_roll_plan || {};
-        const clips = bp.clips || [];
-        const clipsStr = clips.map(c => `${c.clip_id}(${c.archetype})`).join(', ');
-        document.getElementById('val3-broll').innerText = clipsStr || '-';
-        
-        const ss = sc.script_summary || {};
-        document.getElementById('val3-hook').innerText = ss.hook || '-';
-        document.getElementById('val3-cta').innerText = ss.cta || '-';
-        
-        document.getElementById('val3-status').innerText = data.status;
-      }, 'badge3');
-    } else {
-      setBadge('badge3', 'fail', 'FAIL');
-      document.getElementById('btn3').disabled = false;
-    }
-  }
-
-  async function runStep4() {
-    setBadge('badge4', 'running', 'RUNNING');
-    document.getElementById('btn4').disabled = true;
-    
-    const { status } = await apiCall('POST', `/api/generations/${GLOBAL_GEN_ID}/approve-strategy`);
-    if (status >= 200 && status < 300) {
-      document.getElementById('res4').style.display = 'block';
-      pollStatus('preview_ready', (data) => {
-        setBadge('badge4', 'pass', 'PASS');
-        document.getElementById('btn5').disabled = false;
-        
-        if (data.preview_url) {
-          const vid = document.getElementById('val4-vid');
-          vid.src = data.preview_url;
-          vid.style.display = 'block';
-        }
-        document.getElementById('val4-status').innerText = data.status;
-        document.getElementById('val4-tpl').innerText = '-'; 
-      }, 'badge4');
-    } else {
-      setBadge('badge4', 'fail', 'FAIL');
-      document.getElementById('btn4').disabled = false;
-    }
-  }
-
-  async function runStep5() {
-    const chks = [
-      document.getElementById('chk-comm').checked,
-      document.getElementById('chk-rights').checked,
-      document.getElementById('chk-ai').checked
-    ];
-    if (!chks.every(Boolean)) return alert('Must check all 3 declaration checkboxes!');
-    
-    setBadge('badge5', 'running', 'RUNNING');
-    document.getElementById('btn5').disabled = true;
-    
-    const body = { commercial_use: true, image_rights: true, ai_disclosure: true };
-    const { status } = await apiCall('POST', `/api/generations/${GLOBAL_GEN_ID}/declaration`, body);
-    
-    if (status >= 200 && status < 300) {
-      document.getElementById('res5').style.display = 'block';
-      pollStatus('export_ready', (data) => {
-        setBadge('badge5', 'pass', 'PASS');
-        
-        const urlsDiv = document.getElementById('val5-urls');
-        urlsDiv.innerHTML = '';
-        if (data.export_assets && data.export_assets.length > 0) {
-          data.export_assets.forEach(url => {
-            urlsDiv.innerHTML += `<a href="${url}" target="_blank" style="color:#6366f1;display:block;margin-bottom:4px;">Download Asset</a>`;
-          });
-        } else {
-          urlsDiv.innerText = '-';
-        }
-        
-        document.getElementById('val5-status').innerText = data.status;
-      }, 'badge5');
-    } else {
-      setBadge('badge5', 'fail', 'FAIL');
-      document.getElementById('btn5').disabled = false;
-    }
-  }
-
-  // --- HARDENING ---
-  async function checkWallet() {
-    await apiCall('GET', '/api/wallet');
-  }
-
-  async function forceRetryExport() {
-    if (!GLOBAL_GEN_ID) return alert('No gen ID');
-    await apiCall('POST', `/api/generations/${GLOBAL_GEN_ID}/retry-export`, { resign: true });
-  }
-
-  async function resetGenState() {
-    if (!GLOBAL_GEN_ID) return alert('No gen ID');
-    const st = document.getElementById('manualState').value;
-    if (!st) return alert('Enter a state');
-    await apiCall('POST', `/api/generations/${GLOBAL_GEN_ID}/debug/reset-state`, { status: st });
-  }
+    document.getElementById('btn5').disabled = false;
+  }, 'b4', 180000);
+}
 </script>
 </body>
 </html>

@@ -185,14 +185,23 @@ class WorkerCopy:
     async def refine(
         self, current_script: dict, instruction: str, product_brief: dict, language: str
     ) -> Script:
+        # Normalise current_script to plain dict for clean Jinja2 rendering
+        cs_dict = current_script.__dict__ if hasattr(current_script, "__dict__") else current_script
         rendered = self.prompt_catalog.render(
-            "script-refine", 
-            "1.0.0", 
+            "script-refine",
+            "1.0.0",
             variables={
-                "current_script": current_script,
+                "current_script": {
+                    "hook":      cs_dict.get("hook", ""),
+                    "body":      cs_dict.get("body", ""),
+                    "cta":       cs_dict.get("cta", ""),
+                    "full_text": cs_dict.get("full_text", ""),
+                    "framework": cs_dict.get("framework", ""),
+                },
                 "user_instruction": instruction,
-                "product_brief": product_brief,
-                "language": language,
+                "product_brief":    product_brief,
+                "language":         language,
+                "framework":        cs_dict.get("framework", ""),
             }
         )
         
@@ -215,15 +224,22 @@ class WorkerCopy:
         
         output = json.loads(response.text)
         
-        # Merge updated content into a Script object
+        # current_script may be a Script dataclass or a dict — normalise to dict
+        cs = current_script.__dict__ if hasattr(current_script, "__dict__") else current_script
         updated_script = Script(
-            framework=current_script.get("framework", "pas_micro"),
-            framework_angle=current_script.get("framework_angle", "logic"),
-            full_text=output.get("full_text", ""),
-            evidence_note=current_script.get("evidence_note", ""),
-            suggested_tone=current_script.get("suggested_tone", ""),
-            critic_score=current_script.get("critic_score", 0),
-            critic_rationale=current_script.get("critic_rationale", "")
+            hook=output.get("hook", cs.get("hook", "")),
+            body=output.get("body", cs.get("body", "")),
+            cta=output.get("cta", cs.get("cta", "")),
+            full_text=output.get("full_text", cs.get("full_text", "")),
+            word_count=output.get("word_count", cs.get("word_count", 0)),
+            language_mix=output.get("language_mix", cs.get("language_mix", "hinglish")),
+            framework=cs.get("framework", "pas_micro"),
+            framework_angle=cs.get("framework_angle", "logic"),
+            framework_rationale=cs.get("framework_rationale", ""),
+            evidence_note=cs.get("evidence_note", ""),
+            suggested_tone=cs.get("suggested_tone", ""),
+            critic_score=output.get("critic_score", cs.get("critic_score", 0)),
+            critic_rationale=cs.get("critic_rationale", ""),
         )
         
         COPY_REFINE_TOTAL.inc()

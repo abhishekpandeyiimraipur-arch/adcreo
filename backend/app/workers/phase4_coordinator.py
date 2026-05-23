@@ -149,7 +149,7 @@ async def phase4_coordinator(ctx: dict, gen_id: str) -> None:
         benefit               = product_brief.get("benefit", "natural")
         framework             = product_brief.get("framework_angle", "emotion")
         plan_tier             = gen["plan_tier"] or "starter"
-        b_roll_plan           = json.loads(gen["b_roll_plan"] or "[]")
+        b_roll_plan           = json.loads(gen["b_roll_plan"] or "{}")
         motion_archetype_id   = gen["motion_archetype_id"] or 2
         environment_preset_id = gen["environment_preset_id"] or 1
         strategy_card         = json.loads(gen["strategy_card"] or "{}")
