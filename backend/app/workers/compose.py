@@ -364,7 +364,7 @@ class WorkerCompose:
                 scale_filter = (
                     f"scale={W}:{H}:"
                     f"force_original_aspect_ratio=increase,"
-                    f"crop={W}:{H}"
+                    f"crop={W}:{H}:(ow-iw)/2:(oh-ih)/2"
                 )
             parts.append(
                 f"[{input_idx}:v]fps=30,"
