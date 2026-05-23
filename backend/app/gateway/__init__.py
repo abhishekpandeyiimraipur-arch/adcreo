@@ -1155,8 +1155,8 @@ class ModelGateway:
                 f"request_id={request_id}"
             )
 
-            # Step 2: Poll status every 5 seconds (max 200 seconds)
-            max_polls = 40
+            # Step 2: Poll status every 5 seconds (max 300 seconds)
+            max_polls = 60
             poll_interval = 5
 
             for attempt in range(max_polls):
