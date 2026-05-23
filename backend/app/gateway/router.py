@@ -518,15 +518,18 @@ class ModelGateway:
         headers   = {"Authorization": f"Key {api_key}", "Content-Type": "application/json"}
 
         async with httpx.AsyncClient(timeout=cfg["timeout_s"]) as client:
+            payload = {
+                "image_url": input_data.get("image_url", ""),
+                "prompt":    input_data.get("prompt", ""),
+                "duration":  input_data.get("duration", 9),
+                "seed":      input_data.get("seed", 42),
+            }
+            if input_data.get("aspect_ratio"):
+                payload["aspect_ratio"] = input_data["aspect_ratio"]
             submit = await client.post(
                 cfg["submit_url"],
                 headers=headers,
-                json={
-                    "image_url": input_data.get("image_url", ""),
-                    "prompt":    input_data.get("prompt", ""),
-                    "duration":  input_data.get("duration", 9),
-                    "seed":      input_data.get("seed", 42),
-                },
+                json=payload,
             )
             if submit.status_code not in (200, 201, 202):
                 raise ProviderUnavailableError(
