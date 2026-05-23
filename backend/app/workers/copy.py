@@ -185,14 +185,23 @@ class WorkerCopy:
     async def refine(
         self, current_script: dict, instruction: str, product_brief: dict, language: str
     ) -> Script:
+        # Normalise current_script to plain dict for clean Jinja2 rendering
+        cs_dict = current_script.__dict__ if hasattr(current_script, "__dict__") else current_script
         rendered = self.prompt_catalog.render(
-            "script-refine", 
-            "1.0.0", 
+            "script-refine",
+            "1.0.0",
             variables={
-                "current_script": current_script,
+                "current_script": {
+                    "hook":      cs_dict.get("hook", ""),
+                    "body":      cs_dict.get("body", ""),
+                    "cta":       cs_dict.get("cta", ""),
+                    "full_text": cs_dict.get("full_text", ""),
+                    "framework": cs_dict.get("framework", ""),
+                },
                 "user_instruction": instruction,
-                "product_brief": product_brief,
-                "language": language,
+                "product_brief":    product_brief,
+                "language":         language,
+                "framework":        cs_dict.get("framework", ""),
             }
         )
         
