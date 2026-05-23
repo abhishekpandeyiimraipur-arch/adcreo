@@ -1,28 +1,131 @@
 "use client"
+import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { apiFetch } from "@/lib/api/client"
+import { connectSSE } from "@/lib/sse/client"
 import { HD2Isolation } from "@/components/hd/HD2Isolation"
 
+// ── Status → Screen mapping (server-driven, per BEF §10.4) ──────────
+type GenStatus =
+  | "queued" | "extracting" | "brief_ready"
+  | "scripting" | "critiquing" | "safety_checking" | "scripts_ready"
+  | "strategy_preview" | "awaiting_funds" | "funds_locked"
+  | "rendering" | "reflecting" | "composing" | "preview_ready"
+  | "export_queued" | "export_ready"
+  | "failed_category" | "failed_compliance" | "failed_safety"
+  | "failed_render" | "failed_export"
+
+interface GenerationState {
+  gen_id: string
+  status: GenStatus
+  screen_descriptor?: { screen: string }
+  confidence_score?: number
+  isolated_png_url?: string
+  safe_scripts?: unknown[]
+  selected_script_id?: number
+  strategy_card?: unknown
+  preview_url?: string
+  b_roll_available?: boolean
+  plan_tier?: string
+}
+
+function statusToScreen(status: GenStatus): string {
+  if (["queued", "extracting", "brief_ready"].includes(status)) return "HD2"
+  if (["scripting", "critiquing", "safety_checking", "scripts_ready"].includes(status)) return "HD3"
+  if (["strategy_preview", "awaiting_funds"].includes(status)) return "HD4"
+  if (["funds_locked", "rendering", "reflecting", "composing"].includes(status)) return "HD5"
+  if (["preview_ready", "export_queued", "export_ready", "failed_export"].includes(status)) return "HD6"
+  if (["failed_category", "failed_compliance", "failed_safety"].includes(status)) return "ERROR"
+  return "HD2"
+}
+
 export default function GenerationPage() {
-  const params  = useParams()
-  const router  = useRouter()
-  const genId   = params.gen_id as string
+  const params = useParams()
+  const router = useRouter()
+  const genId  = params.gen_id as string
 
-  function handleContinue() {
-    // Phase 2 built in next micro-phase
-    // For now: show a placeholder
-    router.push(`/${genId}?stage=scripting`)
+  const [gen, setGen]       = useState<GenerationState | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError]   = useState<string | null>(null)
+
+  // ── Hydrate generation state ────────────────────────────────────────
+  const hydrate = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("aw_token")
+      if (!token) { router.push("/"); return }
+      const data = await apiFetch<GenerationState>(`/api/generations/${genId}`)
+      setGen(data)
+    } catch (e: unknown) {
+      const err = e as { status?: number }
+      if (err?.status === 401) { router.push("/"); return }
+      setError("Failed to load generation")
+    } finally {
+      setLoading(false)
+    }
+  }, [genId, router])
+
+  useEffect(() => { hydrate() }, [hydrate])
+
+  // ── SSE — live status updates ────────────────────────────────────────
+  useEffect(() => {
+    if (!gen) return
+    const token = localStorage.getItem("aw_token")
+    const cleanup = connectSSE({
+      genId,
+      token,
+      onEvent: (evt) => {
+        if (evt.status || (evt as { state?: string }).state) {
+          const newStatus = (evt.status || (evt as { state?: string }).state) as GenStatus
+          setGen(prev => prev ? { ...prev, status: newStatus } : prev)
+          // Re-hydrate on key transitions to get fresh data
+          if (["brief_ready", "scripts_ready", "strategy_preview",
+               "preview_ready", "export_ready"].includes(newStatus)) {
+            hydrate()
+          }
+        }
+      },
+    })
+    return cleanup
+  }, [gen?.gen_id, genId, hydrate])
+
+  // ── Loading state ───────────────────────────────────────────────────
+  if (loading) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-amber-400 text-sm animate-pulse">Loading...</div>
+    </div>
+  )
+
+  if (error || !gen) return (
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-red-400 text-sm">{error ?? "Generation not found"}</div>
+    </div>
+  )
+
+  const screen = gen.screen_descriptor?.screen ?? statusToScreen(gen.status)
+
+  // ── Screen router ───────────────────────────────────────────────────
+  if (screen === "HD2" || gen.status === "brief_ready" ||
+      gen.status === "extracting" || gen.status === "queued") {
+    return (
+      <HD2Isolation
+        genId={genId}
+        confidenceScore={gen.confidence_score}
+        isolatedPngUrl={gen.isolated_png_url}
+        onContinue={hydrate}
+        onReupload={() => router.push("/")}
+      />
+    )
   }
 
-  function handleReupload() {
-    // Return to HD1 — built in a future slice
-    router.push("/")
-  }
-
+  // Placeholder screens — built in next tasks
   return (
-    <HD2Isolation
-      genId={genId}
-      onContinue={handleContinue}
-      onReupload={handleReupload}
-    />
+    <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
+      <div className="text-white font-mono text-xs text-center">
+        <div className="text-amber-400 text-lg mb-2">Adcreo</div>
+        <div>gen: {genId.slice(0, 8)}...</div>
+        <div>status: <span className="text-amber-400">{gen.status}</span></div>
+        <div>screen: <span className="text-green-400">{screen}</span></div>
+      </div>
+    </div>
   )
 }
