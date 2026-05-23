@@ -26,6 +26,7 @@ from app.api.routes.approve_strategy import router as approve_strategy_router
 from app.api.routes.chat import router as chat_router
 from app.api.routes.declaration import router as declaration_router
 from app.api.routes.retry_export import router as retry_export_router
+from app.routes.auth import router as auth_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -138,3 +139,4 @@ app.include_router(approve_strategy_router)
 app.include_router(chat_router)
 app.include_router(declaration_router, prefix="/api")
 app.include_router(retry_export_router, prefix="/api")
+app.include_router(auth_router, prefix="/auth")
