@@ -93,6 +93,16 @@ export default function HD3Forge({ genId, onAdvance }: Props) {
 
   useEffect(() => { hydrate() }, [hydrate])
 
+  // ── Fallback poll — fires once after 20s if scripts still empty ───
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!gen || (gen.safe_scripts ?? []).length === 0) {
+        hydrate()
+      }
+    }, 20000)
+    return () => clearTimeout(timer)
+  }, [gen, hydrate])
+
   // ── SSE — wait for scripts_ready ─────────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("aw_token")
