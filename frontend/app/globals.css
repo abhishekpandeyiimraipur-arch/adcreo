@@ -11,6 +11,20 @@
   --radius: 0.75rem;
   --amber: #f59e0b;
   --amber-hover: #fbbf24;
+
+  /* ── Adcreo Brand Tokens ─────────────────────────────── */
+  --brand-primary: #0D9488;
+  --brand-primary-hover: #0F766E;
+  --brand-primary-light: #5EEAD4;
+  --brand-accent: #FBBF24;
+  --brand-bg: #0F172A;
+  --brand-surface: #1E293B;
+  --brand-surface-hover: #263548;
+  --brand-border: #334155;
+  --brand-border-subtle: #1E293B;
+  --brand-fg: #F8FAFC;
+  --brand-fg-muted: #94A3B8;
+  --brand-fg-subtle: #475569;
 }
 
 * {
