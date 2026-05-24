@@ -277,7 +277,7 @@ export default function HD4Vault({ genId, onAdvance }: Props) {
         </button>
 
         <button
-          onClick={() => router.back()}
+          onClick={() => router.push(`/${genId}`)}
           className="mt-3 w-full py-3 text-zinc-500 text-sm hover:text-zinc-300 transition-colors"
         >
           ← Edit Script
