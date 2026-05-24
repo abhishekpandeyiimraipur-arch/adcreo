@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation"
 import { apiFetch } from "@/lib/api/client"
 import { connectSSE } from "@/lib/sse/client"
 import { HD2Isolation } from "@/components/hd/HD2Isolation"
+import HD3Forge from "@/components/hd/HD3Forge"
 
 // ── Status → Screen mapping (server-driven, per BEF §10.4) ──────────
 type GenStatus =
@@ -117,7 +118,21 @@ export default function GenerationPage() {
     )
   }
 
-  // Placeholder screens — built in next tasks
+  if (screen === "HD3" ||
+      gen.status === "scripting" ||
+      gen.status === "critiquing" ||
+      gen.status === "safety_checking" ||
+      gen.status === "scripts_ready" ||
+      gen.status === "regenerating") {
+    return (
+      <HD3Forge
+        genId={genId}
+        onAdvance={hydrate}
+      />
+    )
+  }
+
+  // Placeholder for HD4/HD5/HD6 — building next
   return (
     <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
       <div className="text-white font-mono text-xs text-center">
