@@ -165,7 +165,7 @@ PROVIDER_CONFIG: dict[str, dict] = {
     "groq-llama-guard": {
         "url":      "https://api.groq.com/openai/v1/chat/completions",
         "key_env":  "GROQ_API_KEY",
-        "model_id": "meta-llama/llama-guard-4-12b",
+        "model_id": "llama-guard-3-8b",
         "timeout_s": 30,
         "cost_inr":  Decimal("0.00"),
     },
