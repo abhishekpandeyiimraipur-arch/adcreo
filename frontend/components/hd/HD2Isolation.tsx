@@ -38,6 +38,21 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
   const [imageView, setImageView] = useState<"isolated" | "source">("isolated")
   const [advancing, setAdvancing] = useState(false)
 
+  // ── Fallback poll — fires after 20s if still loading/no image ────
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!data || !data.isolated_png_url) {
+        apiGet<GenerationData>(`/api/generations/${genId}`)
+          .then(fetchedData => {
+            setData(fetchedData)
+            setLoading(false)
+          })
+          .catch(console.error)
+      }
+    }, 20000)
+    return () => clearTimeout(timer)
+  }, [genId, data])
+
   useEffect(() => {
     // STEP 1: GET hydration FIRST
     apiGet<GenerationData>(`/api/generations/${genId}`)
