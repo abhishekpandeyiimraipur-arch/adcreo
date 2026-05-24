@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Beta — Adcreo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center px-6">
+  <div class="w-full max-w-lg">
+    <div class="text-center mb-10">
+      <a href="/" class="inline-flex items-center gap-2 mb-8">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #0D9488, #0F766E)">
+          <span class="text-white font-bold text-sm">A</span>
+        </div>
+        <span class="font-bold text-lg">Ad<span class="text-teal-400">creo</span></span>
+      </a>
+      <h1 class="text-4xl font-extrabold mb-3">Join the Beta</h1>
+      <p class="text-slate-400 text-lg">Free access during beta. We invite new brands every week.</p>
+    </div>
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-8">
+      <form action="https://formspree.io/f/xojbneqk" method="POST" class="space-y-5">
+        <div>
+          <label class="text-slate-300 text-sm font-medium block mb-2">Your name</label>
+          <input type="text" name="name" required placeholder="Rahul Sharma"
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500 transition-colors">
+        </div>
+        <div>
+          <label class="text-slate-300 text-sm font-medium block mb-2">Email address</label>
+          <input type="email" name="email" required placeholder="rahul@yourbrand.com"
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500 transition-colors">
+        </div>
+        <div>
+          <label class="text-slate-300 text-sm font-medium block mb-2">What do you sell?</label>
+          <select name="category" required
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-500 transition-colors">
+            <option value="" disabled selected>Select your category</option>
+            <option value="beauty">Beauty & Skincare</option>
+            <option value="fashion">Fashion & Apparel</option>
+            <option value="electronics">Electronics & Gadgets</option>
+            <option value="food">Food & Beverages</option>
+            <option value="home">Home & Decor</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-slate-300 text-sm font-medium block mb-2">Your brand / store name <span class="text-slate-600">(optional)</span></label>
+          <input type="text" name="brand" placeholder="e.g. Nykaa, Mamaearth, your brand"
+                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:border-teal-500 transition-colors">
+        </div>
+        <button type="submit"
+                class="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-xl transition-colors text-lg">
+          Join Beta Waitlist →
+        </button>
+      </form>
+      <p class="text-slate-600 text-xs text-center mt-4">No spam. We'll invite you within 48 hours.</p>
+    </div>
+    <p class="text-center mt-6 text-slate-500 text-sm">
+      Already have access? <a href="https://app.adcreo.in" class="text-teal-400 hover:text-teal-300">Launch app →</a>
+    </p>
+  </div>
+</body>
+</html>
