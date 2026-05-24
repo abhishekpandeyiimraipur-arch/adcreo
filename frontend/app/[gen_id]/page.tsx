@@ -113,8 +113,6 @@ export default function GenerationPage() {
     return (
       <HD2Isolation
         genId={genId}
-        confidenceScore={gen.confidence_score}
-        isolatedPngUrl={gen.isolated_png_url}
         onContinue={hydrate}
         onReupload={() => router.push("/")}
       />
