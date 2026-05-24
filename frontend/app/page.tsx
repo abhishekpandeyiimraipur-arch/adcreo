@@ -91,7 +91,7 @@ export default function Home() {
               theme="filled_black"
               shape="rectangular"
               size="large"
-              text="signin_with_google"
+              text="signin_with"
             />
           </div>
 
