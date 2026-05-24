@@ -305,14 +305,12 @@ class WorkerExport:
 
         # ── Temp file paths ───────────────────────────────────────
         preview_path  = self._get_temp_path(gen_id, "preview.mp4")
-        square_path   = self._get_temp_path(gen_id, "square.mp4")
         vertical_path = self._get_temp_path(gen_id, "vertical.mp4")
-        sq_signed     = self._get_temp_path(gen_id, "square_signed.mp4")
         vt_signed     = self._get_temp_path(gen_id, "vertical_signed.mp4")
         manifest_path = self._get_temp_path(gen_id, "manifest.json")
         temp_files    = [
-            preview_path, square_path, vertical_path,
-            sq_signed, vt_signed, manifest_path,
+            preview_path, vertical_path,
+            vt_signed, manifest_path,
         ]
 
         try:
@@ -331,39 +329,28 @@ class WorkerExport:
                 f"WorkerExport: preview downloaded gen={gen_id}"
             )
 
-            # ── Step 6: Scale to 2 formats ────────────────────────
-            await asyncio.gather(
-                self._ffmpeg_scale(
-                    preview_path, square_path, "1080:1080"
-                ),
-                self._ffmpeg_scale(
-                    preview_path, vertical_path, "1080:1920"
-                ),
+            # ── Step 6: Scale to vertical 9:16 only ──────────────
+            await self._ffmpeg_scale(
+                preview_path, vertical_path, "1080:1920"
             )
             logger.info(
-                f"WorkerExport: scaled 2 formats gen={gen_id}"
+                f"WorkerExport: scaled vertical format gen={gen_id}"
             )
 
             # ── Step 7: Build C2PA manifest ───────────────────────
             manifest_path = self._build_manifest(gen_id, user_id)
 
-            # ── Step 8: C2PA sign both formats sequentially ───────
-            # Sequential not parallel — c2patool is CPU-bound
-            # and shares the same manifest file
-            sq_signed = await self._c2pa_sign(
-                square_path, manifest_path, gen_id
-            )
+            # ── Step 8: C2PA sign vertical format ────────────────
             vt_signed = await self._c2pa_sign(
                 vertical_path, manifest_path, gen_id
             )
             logger.info(
-                f"WorkerExport: C2PA signed both formats "
+                f"WorkerExport: C2PA signed vertical format "
                 f"gen={gen_id} manifest_hash="
                 f"{self._last_manifest_hash[:16]}..."
             )
 
-            # ── Step 9: Upload signed formats to R2 ──────────────
-            sq_r2_key = f"{gen_id}/export/square_1x1.mp4"
+            # ── Step 9: Upload vertical format to R2 ─────────────
             vt_r2_key = f"{gen_id}/export/vertical_9x16.mp4"
 
             async def upload(local_path: str, r2_key: str):
@@ -378,21 +365,16 @@ class WorkerExport:
                     ContentType="video/mp4",
                 )
 
-            await asyncio.gather(
-                upload(sq_signed, sq_r2_key),
-                upload(vt_signed, vt_r2_key),
-            )
+            await upload(vt_signed, vt_r2_key)
             logger.info(
-                f"WorkerExport: uploaded both formats gen={gen_id}"
+                f"WorkerExport: uploaded vertical format gen={gen_id}"
             )
 
-            # ── Step 10: Construct public download URLs ───────────
-            sq_public_url = f"{r2_public_url}/{sq_r2_key}"
+            # ── Step 10: Construct public download URL ────────────
             vt_public_url = f"{r2_public_url}/{vt_r2_key}"
 
             exports_payload = {
-                "square_url":         sq_public_url,
-                "vertical_url":       vt_public_url,
+                "portrait_url":       vt_public_url,
                 "c2pa_manifest_hash": self._last_manifest_hash,
                 "finalized_at":       datetime.now(
                     timezone.utc
