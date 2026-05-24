@@ -5,6 +5,9 @@ import { apiFetch } from "@/lib/api/client"
 import { connectSSE } from "@/lib/sse/client"
 import { HD2Isolation } from "@/components/hd/HD2Isolation"
 import HD3Forge from "@/components/hd/HD3Forge"
+import HD4Vault from "@/components/hd/HD4Vault"
+import HD5Kiln from "@/components/hd/HD5Kiln"
+import HD6Preview from "@/components/hd/HD6Preview"
 
 // ── Status → Screen mapping (server-driven, per BEF §10.4) ──────────
 type GenStatus =
@@ -132,14 +135,50 @@ export default function GenerationPage() {
     )
   }
 
-  // Placeholder for HD4/HD5/HD6 — building next
+  if (screen === "HD4" ||
+      gen.status === "strategy_preview" ||
+      gen.status === "awaiting_funds") {
+    return (
+      <HD4Vault
+        genId={genId}
+        onAdvance={hydrate}
+      />
+    )
+  }
+
+  if (screen === "HD5" ||
+      gen.status === "funds_locked" ||
+      gen.status === "rendering" ||
+      gen.status === "reflecting" ||
+      gen.status === "composing") {
+    return (
+      <HD5Kiln
+        genId={genId}
+        initialStatus={gen.status}
+        onComplete={hydrate}
+      />
+    )
+  }
+
+  if (screen === "HD6" ||
+      gen.status === "preview_ready" ||
+      gen.status === "export_queued" ||
+      gen.status === "export_ready" ||
+      gen.status === "failed_export") {
+    return (
+      <HD6Preview
+        genId={genId}
+        initialStatus={gen.status}
+        initialData={gen as any}
+      />
+    )
+  }
+
+  // Fallback — should never reach here
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center flex-col gap-4">
-      <div className="text-white font-mono text-xs text-center">
-        <div className="text-amber-400 text-lg mb-2">Adcreo</div>
-        <div>gen: {genId.slice(0, 8)}...</div>
-        <div>status: <span className="text-amber-400">{gen.status}</span></div>
-        <div>screen: <span className="text-green-400">{screen}</span></div>
+    <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-zinc-500 text-sm">
+        Unknown state: {gen.status}
       </div>
     </div>
   )
