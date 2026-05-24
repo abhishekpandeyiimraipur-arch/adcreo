@@ -37,13 +37,6 @@ export default function HD6Preview({ genId, initialStatus, initialData }: Props)
   const [declared,  setDeclared]  = useState(false)
   const [error, setError]         = useState<string | null>(null)
 
-  // ── Poll on mount if preview_url missing (SSE race fix) ──────────
-  useEffect(() => {
-    if (!data.preview_url) {
-      const timer = setTimeout(() => hydrate(), 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [data.preview_url, hydrate])
 
   // ── SSE — wait for export_ready ───────────────────────────────────
   useEffect(() => {
@@ -79,6 +72,14 @@ export default function HD6Preview({ genId, initialStatus, initialData }: Props)
       setError("Failed to refresh. Please reload.")
     }
   }, [genId, router])
+
+  // ── Poll on mount if preview_url missing (SSE race fix) ──────────
+  useEffect(() => {
+    if (!data.preview_url) {
+      const timer = setTimeout(() => hydrate(), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [data.preview_url, hydrate])
 
   // ── Declaration submit ─────────────────────────────────────────────
   async function handleDeclare() {
