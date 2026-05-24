@@ -58,7 +58,7 @@ async def google_auth(body: GoogleAuthRequest, request: Request) -> dict:
                 (google_id, email, name, plan_tier, credits_remaining,
                  session_version, beta_invited)
             VALUES
-                ($1, $2, $3, 'starter', 0, 1, TRUE)
+                ($1, $2, $3, 'pro', 5, 1, TRUE)
             ON CONFLICT (google_id) DO UPDATE
                 SET name       = EXCLUDED.name,
                     updated_at = NOW()
@@ -69,6 +69,16 @@ async def google_auth(body: GoogleAuthRequest, request: Request) -> dict:
     except Exception as exc:
         logger.error("google_auth_db_error: %s", exc, exc_info=True)
         raise HTTPException(status_code=500, detail="Database error during sign-in")
+
+    # ── Step 2b: Seed Redis wallet (DB0) for new users ───────────────────
+    try:
+        redis_mgr = request.app.state.redis_mgr
+        await redis_mgr.db0.hsetnx(
+            f"wallet:{str(row['user_id'])}", "balance", 5
+        )
+    except Exception as exc:
+        logger.warning("redis_wallet_seed_failed user_id=%s: %s", row["user_id"], exc)
+        # Non-fatal — JWT still issued; wallet can be seeded manually if needed
 
     # ── Step 3: Mint HS256 JWT ────────────────────────────────────────────
     claims = {
