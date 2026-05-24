@@ -123,8 +123,7 @@ export default function GenerationPage() {
       gen.status === "scripting" ||
       gen.status === "critiquing" ||
       gen.status === "safety_checking" ||
-      gen.status === "scripts_ready" ||
-      gen.status === "regenerating") {
+      gen.status === "scripts_ready") {
     return (
       <HD3Forge
         genId={genId}
