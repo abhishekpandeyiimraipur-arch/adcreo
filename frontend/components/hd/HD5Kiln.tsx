@@ -33,6 +33,26 @@ export default function HD5Kiln({ genId, initialStatus, onComplete }: Props) {
   const [currentStatus, setCurrentStatus] = useState(initialStatus)
   const activeIdx = getStageIndex(currentStatus)
 
+  // ── Fallback poll — fires once after 5s if still on stage 0 ──────
+  useEffect(() => {
+    const token = localStorage.getItem("aw_token")
+    if (!token) return
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE ?? ""}/api/generations/${genId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        const data = await res.json()
+        if (data.status) setCurrentStatus(data.status)
+        if (["preview_ready", "export_queued", "export_ready"].includes(data.status)) {
+          onComplete()
+        }
+      } catch { /* silent */ }
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [genId, onComplete])
+
   useEffect(() => {
     const token = localStorage.getItem("aw_token")
     const cleanup = connectSSE({
