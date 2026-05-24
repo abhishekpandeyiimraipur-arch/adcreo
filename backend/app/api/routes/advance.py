@@ -68,7 +68,8 @@ async def get_generation(
     query = """
         SELECT gen_id, status, confidence_score, isolated_png_url,
                source_url, product_brief, agent_motion_suggestion, user_id,
-               critic_scores, routed_frameworks, raw_scripts, selected_script_id
+               critic_scores, routed_frameworks, raw_scripts, selected_script_id,
+               safe_scripts, campaign_brief, chat_turns_used, refined_script
         FROM generations
         WHERE gen_id = $1 AND user_id = $2
     """
@@ -135,7 +136,11 @@ async def get_generation(
         "critic_scores": (json.loads(row["critic_scores"]) if isinstance(row["critic_scores"], str) else dict(row["critic_scores"])) if row["critic_scores"] else {},
         "routed_frameworks": list(row["routed_frameworks"]) if row["routed_frameworks"] else [],
         "raw_scripts": (json.loads(row["raw_scripts"]) if isinstance(row["raw_scripts"], str) else list(row["raw_scripts"])) if row["raw_scripts"] else [],
-        "selected_script_id": row["selected_script_id"]
+        "selected_script_id": row["selected_script_id"],
+        "safe_scripts": (json.loads(row["safe_scripts"]) if isinstance(row["safe_scripts"], str) else list(row["safe_scripts"])) if row["safe_scripts"] else [],
+        "campaign_brief": (json.loads(row["campaign_brief"]) if isinstance(row["campaign_brief"], str) else dict(row["campaign_brief"])) if row["campaign_brief"] else {},
+        "chat_turns_used": row["chat_turns_used"] if row["chat_turns_used"] is not None else 0,
+        "refined_script": (json.loads(row["refined_script"]) if isinstance(row["refined_script"], str) else row["refined_script"]) if row["refined_script"] else None,
     }
 
 # -------------------------------------------------------------------------
