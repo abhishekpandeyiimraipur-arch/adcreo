@@ -70,6 +70,14 @@ export default function GenerationPage() {
 
   useEffect(() => { hydrate() }, [hydrate])
 
+  // ── Periodic hydrate — every 8s as SSE fallback ──────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      hydrate()
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [hydrate])
+
   // ── SSE — live status updates ────────────────────────────────────────
   useEffect(() => {
     if (!gen) return
