@@ -146,7 +146,6 @@ export default function HD6Preview({ genId, initialStatus, initialData }: Props)
             <video
               src={data.preview_url}
               controls
-              autoPlay
               muted
               loop
               playsInline
@@ -250,6 +249,7 @@ export default function HD6Preview({ genId, initialStatus, initialData }: Props)
 
             <a
               href={data.exports.portrait_url}
+              download="adcreo-ad-9x16.mp4"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between w-full py-3 px-4
