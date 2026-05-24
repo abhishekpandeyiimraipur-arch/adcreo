@@ -69,7 +69,8 @@ async def get_generation(
         SELECT gen_id, status, confidence_score, isolated_png_url,
                source_url, product_brief, agent_motion_suggestion, user_id,
                critic_scores, routed_frameworks, raw_scripts, selected_script_id,
-               safe_scripts, campaign_brief, chat_turns_used, refined_script
+               safe_scripts, campaign_brief, chat_turns_used, refined_script,
+               preview_url, exports
         FROM generations
         WHERE gen_id = $1 AND user_id = $2
     """
@@ -141,6 +142,8 @@ async def get_generation(
         "campaign_brief": (json.loads(row["campaign_brief"]) if isinstance(row["campaign_brief"], str) else dict(row["campaign_brief"])) if row["campaign_brief"] else {},
         "chat_turns_used": row["chat_turns_used"] if row["chat_turns_used"] is not None else 0,
         "refined_script": (json.loads(row["refined_script"]) if isinstance(row["refined_script"], str) else row["refined_script"]) if row["refined_script"] else None,
+        "preview_url": row["preview_url"] if row["preview_url"] else None,
+        "exports": (json.loads(row["exports"]) if isinstance(row["exports"], str) else dict(row["exports"])) if row["exports"] else None,
     }
 
 # -------------------------------------------------------------------------
