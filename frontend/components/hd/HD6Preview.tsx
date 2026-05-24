@@ -37,6 +37,14 @@ export default function HD6Preview({ genId, initialStatus, initialData }: Props)
   const [declared,  setDeclared]  = useState(false)
   const [error, setError]         = useState<string | null>(null)
 
+  // ── Poll on mount if preview_url missing (SSE race fix) ──────────
+  useEffect(() => {
+    if (!data.preview_url) {
+      const timer = setTimeout(() => hydrate(), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [data.preview_url, hydrate])
+
   // ── SSE — wait for export_ready ───────────────────────────────────
   useEffect(() => {
     const token = localStorage.getItem("aw_token")
@@ -240,24 +248,12 @@ export default function HD6Preview({ genId, initialStatus, initialData }: Props)
             </div>
 
             <a
-              href={data.exports.square_url}
+              href={data.exports.portrait_url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between w-full py-3 px-4
                          bg-amber-500 hover:bg-amber-400 text-black font-bold
                          rounded-xl transition-colors text-sm"
-            >
-              <span>Download 1:1 (Feed)</span>
-              <span className="text-xs font-normal opacity-70">Square · 480p</span>
-            </a>
-
-            <a
-              href={data.exports.portrait_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between w-full py-3 px-4
-                         border border-amber-500 text-amber-400 hover:bg-amber-500
-                         hover:text-black font-bold rounded-xl transition-colors text-sm"
             >
               <span>Download 9:16 (Reels/Stories)</span>
               <span className="text-xs font-normal opacity-70">Portrait · 480p</span>
