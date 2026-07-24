@@ -2,6 +2,10 @@
 import { useParams, useRouter } from "next/navigation"
 import { HD2Isolation } from "@/components/hd/HD2Isolation"
 
+export function generateStaticParams() {
+  return []
+}
+
 export default function GenerationPage() {
   const params  = useParams()
   const router  = useRouter()
