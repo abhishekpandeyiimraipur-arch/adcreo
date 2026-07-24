@@ -1,5 +1,7 @@
 "use client"
+
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { apiGet, apiPost } from "@/lib/api/client"
 import { connectSSE } from "@/lib/sse/client"
 import { ConfidenceBorder } from "@/components/shared/ConfidenceBorder"
@@ -20,8 +22,8 @@ type GenerationData = {
 
 type Props = {
   genId: string
-  onContinue: () => void   // called after successful /advance
-  onReupload: () => void   // called when user clicks Re-upload
+  onContinue?: () => void   // optional with router fallback
+  onReupload?: () => void   // optional with router fallback
 }
 
 const HEADLINE: Record<ConfidenceBand, string> = {
@@ -31,12 +33,17 @@ const HEADLINE: Record<ConfidenceBand, string> = {
   unknown: "Processing your product...",
 }
 
-export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
+export function HD2Isolation({ genId, onContinue: customOnContinue, onReupload: customOnReupload }: Props) {
+  const router = useRouter()
   const [data, setData] = useState<GenerationData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [imageView, setImageView] = useState<"isolated" | "source">("isolated")
   const [advancing, setAdvancing] = useState(false)
+
+  // Default route handlers if not explicitly provided as props
+  const onContinue = customOnContinue ?? (() => router.push(`/${genId}?stage=scripting`))
+  const onReupload = customOnReupload ?? (() => router.push("/"))
 
   useEffect(() => {
     // STEP 1: GET hydration FIRST
@@ -113,8 +120,7 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
   const imageUrl = showSource ? data.source_url : data.isolated_png_url
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col items-center 
-                    justify-center px-4 py-12 gap-8">
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center px-4 py-12 gap-8">
 
       {/* Headline */}
       <h2 className="text-white text-xl font-medium text-center max-w-md">
@@ -145,8 +151,7 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
               className="w-full h-full object-contain"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center 
-                            text-zinc-600 text-sm">
+            <div className="w-full h-full flex items-center justify-center text-zinc-600 text-sm">
               No image available
             </div>
           )}
@@ -159,11 +164,11 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
           <button
             key={view}
             onClick={() => setImageView(view)}
-            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all
-              ${imageView === view
+            className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              imageView === view
                 ? "bg-zinc-700 text-white"
                 : "text-zinc-400 hover:text-zinc-200"
-              }`}
+            }`}
           >
             {view === "isolated" ? "Isolated" : "Source"}
           </button>
@@ -174,10 +179,8 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
       {data.director_tips.length > 0 && (
         <div className="max-w-sm w-full space-y-2">
           {data.director_tips.map((tip, i) => (
-            <div key={i} className="text-zinc-400 text-sm bg-zinc-900 
-                                     rounded-lg px-4 py-2">
-              <span className="text-zinc-500 uppercase text-xs 
-                               tracking-wide mr-2">
+            <div key={i} className="text-zinc-400 text-sm bg-zinc-900 rounded-lg px-4 py-2">
+              <span className="text-zinc-500 uppercase text-xs tracking-wide mr-2">
                 {tip.tip_type}
               </span>
               {tip.copy_en}
@@ -193,17 +196,14 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
           <>
             <button
               onClick={onReupload}
-              className="px-6 py-2.5 bg-white text-zinc-900 rounded-lg 
-                         font-medium hover:bg-zinc-100 transition-colors"
+              className="px-6 py-2.5 bg-white text-zinc-900 rounded-lg font-medium hover:bg-zinc-100 transition-colors"
             >
               ↻ Re-upload
             </button>
             <button
               onClick={handleAdvance}
               disabled={advancing}
-              className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg 
-                         font-medium hover:bg-zinc-700 transition-colors
-                         disabled:opacity-50"
+              className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg font-medium hover:bg-zinc-700 transition-colors disabled:opacity-50"
             >
               {advancing ? "Processing..." : "Continue Anyway"}
             </button>
@@ -213,17 +213,14 @@ export function HD2Isolation({ genId, onContinue, onReupload }: Props) {
           <>
             <button
               onClick={onReupload}
-              className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg 
-                         font-medium hover:bg-zinc-700 transition-colors"
+              className="px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-lg font-medium hover:bg-zinc-700 transition-colors"
             >
               ↻ Re-upload
             </button>
             <button
               onClick={handleAdvance}
               disabled={advancing}
-              className="px-6 py-2.5 bg-white text-zinc-900 rounded-lg 
-                         font-medium hover:bg-zinc-100 transition-colors
-                         disabled:opacity-50"
+              className="px-6 py-2.5 bg-white text-zinc-900 rounded-lg font-medium hover:bg-zinc-100 transition-colors disabled:opacity-50"
             >
               {advancing ? "Processing..." : "✓ Continue to Scripts →"}
             </button>
