@@ -1,10 +1,15 @@
-import { HD2IsolationWrapper } from "@/components/hd/HD2IsolationWrapper"
+import { HD2Isolation } from "@/components/hd/HD2Isolation"
 
-// Tells Next.js static export to generate the template shell
+// Required by Next.js static export for dynamic routes
 export function generateStaticParams() {
   return []
 }
 
-export default function GenerationPage() {
-  return <HD2IsolationWrapper />
+type Props = {
+  params: Promise<{ gen_id: string }>
+}
+
+export default async function GenerationPage({ params }: Props) {
+  const { gen_id } = await params
+  return <HD2Isolation genId={gen_id} />
 }
